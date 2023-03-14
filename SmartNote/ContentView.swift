@@ -21,24 +21,31 @@ struct ContentView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                 }
-                Button(action: {
-                    self.sourceType = .camera
-                    self.isImagePickerDisplay.toggle()
-                }) {
-                    Image(systemName: "camera")
-                }.padding()
-                Button(action: {
-                    self.sourceType = .photoLibrary
-                    self.isImagePickerDisplay.toggle()
-                }) {
-                    Image(systemName: "photo")
-                }.padding()
-            }
-            .navigationBarTitle("SmartNote")
-            .sheet(isPresented: self.$isImagePickerDisplay) {
-                ImagePickerView(selectedImage: self.$selectedImage, sourceType: self.$sourceType)
-            }
+            }.navigationBarTitle("SmartNote")
+                .sheet(isPresented: self.$isImagePickerDisplay) {
+                    ImagePickerView(selectedImage: self.$selectedImage, sourceType: self.$sourceType)
+                }
         }
+        HStack (alignment: .bottom){
+            Button(action: {
+                self.sourceType = .camera
+                self.isImagePickerDisplay.toggle()
+            }) {
+                Image(systemName: "camera")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 25)
+            }
+            Button(action: {
+                self.sourceType = .photoLibrary
+                self.isImagePickerDisplay.toggle()
+            }) {
+                Image(systemName: "photo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 25)
+            }
+        }.frame(height: 100)
     }
 }
 
