@@ -31,13 +31,15 @@ class SmartNoteARViewModel: ObservableObject {
     let arView = ARView(frame: .zero)
     
     init() {
-        // Add any necessary configuration for the ARView here
-        
+
         // Create a box mesh
-        let mesh = MeshResource.generateBox(size: 0.1)
+        let mesh = MeshResource.generateBox(size: [0.2, 0.2, 0.001])
         
-        // Create a red material
-        let material = SimpleMaterial(color: .red, isMetallic: false)
+        let imageName = "amongus"
+        
+        // Create a material
+        var material = SimpleMaterial()
+        material.color.texture = .init(try! .load(named: imageName))
         
         // Create a model entity with the mesh and material
         let entity = ModelEntity(mesh: mesh, materials: [material])
