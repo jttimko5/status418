@@ -120,19 +120,25 @@ struct KeywordView: View {
     @State private var newKeyword = ""
     @State private var keywords = ["apple", "banana", "orange"]
     @State private var isEditing = false
-    @State private var editedKeyword = ""
-
+    
     var body: some View {
         VStack {
             List {
-                ForEach(keywords, id: \.self) { keyword in
+                ForEach(keywords.indices, id: \.self) { index in
+                    let keyword = keywords[index]
                     if isEditing {
                         TextField("Enter keyword", text: Binding(
-                            get: { keyword == editedKeyword ? editedKeyword : keyword },
-                            set: { newValue in editedKeyword = newValue }
+                            get: { keyword },
+                            set: { keywords[index] = $0 }
                         ))
                     } else {
-                        Text(keyword)
+                        Button(action: {
+                            withAnimation {
+                                isEditing = true
+                            }
+                        }) {
+                            Text(keyword)
+                        }
                     }
                 }
                 .onDelete(perform: delete)
@@ -143,8 +149,6 @@ struct KeywordView: View {
                     Button(action: {
                         withAnimation {
                             isEditing = false
-                            keywords[keywords.firstIndex(of: editedKeyword)!] = editedKeyword
-                            editedKeyword = ""
                         }
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to:nil, from:nil, for:nil)
                     }) {
@@ -154,7 +158,6 @@ struct KeywordView: View {
                     Button(action: {
                         withAnimation {
                             isEditing = true
-                            editedKeyword = keywords[0]
                         }
                     }) {
                         Text("Edit")
@@ -192,4 +195,3 @@ struct KeywordView: View {
         }
     }
 }
-
