@@ -26,6 +26,14 @@ struct ContentView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                 }
+                NavigationLink(destination: SmartNoteARView()) {
+                                    Text("Launch AR")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(Color.blue)
+                                        .cornerRadius(10)
+                                }
             }.navigationBarTitle("SmartNote")
                 .sheet(isPresented: self.$isImagePickerDisplay) {
                     ImagePickerView(selectedImage: self.$selectedImage, sourceType: self.$sourceType)
@@ -97,6 +105,7 @@ struct ContentView: View {
                     .scaledToFit()
                     .frame(width: 100, height: 25)
             }
+
         }.frame(height: 100)
     }
 }
