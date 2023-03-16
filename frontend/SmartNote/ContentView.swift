@@ -61,7 +61,6 @@ struct ContentView: View {
                                 .frame(width: 100, height: 25)
                     }
                 }.frame(height: 100)
->>>>>>> 77b54d2a47526fa0a42ba129b9bdfb1750845668
             }.navigationBarTitle("SmartNote")
                 .sheet(isPresented: self.$isImagePickerDisplay) {
                     ImagePickerView(selectedImage: self.$selectedImage, sourceType: self.$sourceType)
