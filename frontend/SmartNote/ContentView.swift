@@ -20,16 +20,46 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
+            
             VStack {
                 if selectedImage != nil {
                     Image(uiImage: selectedImage!)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                 }
+                Spacer()
+                HStack (alignment: .bottom){
+                    Button(action: {
+                        self.sourceType = .camera
+                        self.isImagePickerDisplay.toggle()
+                    }) {
+                        Image(systemName: "camera")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 25)
+                    }
+                    Button(action: {
+                        self.sourceType = .photoLibrary
+                        self.isImagePickerDisplay.toggle()
+                    }) {
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 25)
+                    }
+                    NavigationLink(destination: KeywordView()) {
+                            Image(systemName: "arrow.right")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 25)
+                    }
+                }.frame(height: 100)
             }.navigationBarTitle("SmartNote")
                 .sheet(isPresented: self.$isImagePickerDisplay) {
                     ImagePickerView(selectedImage: self.$selectedImage, sourceType: self.$sourceType)
                 }
+            
+            
         }
         
         
@@ -77,33 +107,6 @@ struct ContentView: View {
 //        }
 //        END TESTING API =====================================================
         
-        
-        HStack (alignment: .bottom){
-            Button(action: {
-                self.sourceType = .camera
-                self.isImagePickerDisplay.toggle()
-            }) {
-                Image(systemName: "camera")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 25)
-            }
-            Button(action: {
-                self.sourceType = .photoLibrary
-                self.isImagePickerDisplay.toggle()
-            }) {
-                Image(systemName: "photo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 25)
-            }
-            NavigationLink(destination: KeywordView()) {
-                    Image(systemName: "arrow.right")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 100, height: 25)
-            }
-        }.frame(height: 100)
     }
 }
 
