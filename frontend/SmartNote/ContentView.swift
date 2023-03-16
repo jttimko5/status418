@@ -97,6 +97,12 @@ struct ContentView: View {
                     .scaledToFit()
                     .frame(width: 100, height: 25)
             }
+            NavigationLink(destination: KeywordView()) {
+                    Image(systemName: "arrow.right")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 25)
+            }
         }.frame(height: 100)
     }
 }
@@ -104,5 +110,11 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+    }
+}
+
+struct KeywordView: View {
+    var body: some View {
+        Text("Destination View")
     }
 }
