@@ -117,7 +117,79 @@ struct ContentView_Previews: PreviewProvider {
 }
 
 struct KeywordView: View {
+    @State private var newKeyword = ""
+    @State private var keywords = ["apple", "banana", "orange"]
+    @State private var isEditing = false
+    @State private var editedKeyword = ""
+
     var body: some View {
-        Text("Destination View")
+        VStack {
+            List {
+                ForEach(keywords, id: \.self) { keyword in
+                    if isEditing {
+                        TextField("Enter keyword", text: Binding(
+                            get: { keyword == editedKeyword ? editedKeyword : keyword },
+                            set: { newValue in editedKeyword = newValue }
+                        ))
+                    } else {
+                        Text(keyword)
+                    }
+                }
+                .onDelete(perform: delete)
+            }
+            
+            HStack {
+                if isEditing {
+                    Button(action: {
+                        withAnimation {
+                            isEditing = false
+                            keywords[keywords.firstIndex(of: editedKeyword)!] = editedKeyword
+                            editedKeyword = ""
+                        }
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to:nil, from:nil, for:nil)
+                    }) {
+                        Text("Done")
+                    }
+                } else {
+                    Button(action: {
+                        withAnimation {
+                            isEditing = true
+                            editedKeyword = keywords[0]
+                        }
+                    }) {
+                        Text("Edit")
+                    }
+                }
+                
+                TextField("New keyword", text: $newKeyword, onCommit: addKeyword)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.horizontal)
+                
+                Button(action: addKeyword) {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .navigationTitle("Keywords")
+    }
+    
+    func addKeyword() {
+        guard !newKeyword.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return
+        }
+        
+        withAnimation {
+            keywords.append(newKeyword)
+        }
+        
+        newKeyword = ""
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to:nil, from:nil, for:nil)
+    }
+    
+    func delete(at offsets: IndexSet) {
+        withAnimation {
+            keywords.remove(atOffsets: offsets)
+        }
     }
 }
+
