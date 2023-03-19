@@ -13,6 +13,7 @@
 		21DF8E0D29C0C8210017A5ED /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 21DF8E0C29C0C8210017A5ED /* Preview Assets.xcassets */; };
 		21DF8E1429C0CCCB0017A5ED /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DF8E1329C0CCCB0017A5ED /* ImageView.swift */; };
 		6AC96120BA9B40CF83594B48 /* Pods_SmartNote.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 265EAC97AB6F48788F889246 /* Pods_SmartNote.framework */; };
+		FDC81B8E29C69E6100AC5E54 /* ImageExtraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC81B8D29C69E6100AC5E54 /* ImageExtraction.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,7 @@
 		265EAC97AB6F48788F889246 /* Pods_SmartNote.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SmartNote.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27DA8288947E08900CFAEC4B /* Pods-SmartNote.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SmartNote.release.xcconfig"; path = "Target Support Files/Pods-SmartNote/Pods-SmartNote.release.xcconfig"; sourceTree = "<group>"; };
 		EE41231B5A2408D68712636E /* Pods-SmartNote.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SmartNote.debug.xcconfig"; path = "Target Support Files/Pods-SmartNote/Pods-SmartNote.debug.xcconfig"; sourceTree = "<group>"; };
+		FDC81B8D29C69E6100AC5E54 /* ImageExtraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageExtraction.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +67,7 @@
 				21DF8E0929C0C8210017A5ED /* Assets.xcassets */,
 				21DF8E0B29C0C8210017A5ED /* Preview Content */,
 				21DF8E1329C0CCCB0017A5ED /* ImageView.swift */,
+				FDC81B8D29C69E6100AC5E54 /* ImageExtraction.swift */,
 			);
 			path = SmartNote;
 			sourceTree = "<group>";
@@ -208,6 +211,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FDC81B8E29C69E6100AC5E54 /* ImageExtraction.swift in Sources */,
 				21DF8E1429C0CCCB0017A5ED /* ImageView.swift in Sources */,
 				21DF8E0829C0C8200017A5ED /* ContentView.swift in Sources */,
 				21DF8E0629C0C8200017A5ED /* SmartNoteApp.swift in Sources */,

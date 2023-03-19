@@ -7,6 +7,8 @@
 
 import SwiftUI
 import UIKit
+import Photos
+import Vision
 
 struct ContentView: View {
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
@@ -97,7 +99,6 @@ struct ContentView: View {
 //                        }
 //                    }
 //                }.resume()
-//                
 //            }) {
 //                Image(systemName: "paperplane")
 //                    .resizable()
@@ -172,6 +173,11 @@ struct KeywordView: View {
                     Image(systemName: "plus")
                 }
             }
+            
+            Button(action: findPhotos) {
+                Text("Search Related Photos")
+                Image(systemName: "chevron.right")
+            }
         }
         .navigationTitle("Keywords")
     }
@@ -193,5 +199,10 @@ struct KeywordView: View {
         withAnimation {
             keywords.remove(atOffsets: offsets)
         }
+    }
+    
+    func findPhotos() {
+        let photosURL = showPhotosForKeywords(keywords: keywords)
+        print(photosURL)
     }
 }
