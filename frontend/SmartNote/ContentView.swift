@@ -203,6 +203,7 @@ struct KeywordView: View {
     
     func findPhotos() {
         let photosURL = showPhotosForKeywords(keywords: keywords)
-        print(photosURL)
+        let displayPhotoURL = Array(photosURL.prefix(7))
+        let ARview = SmartNoteARView(URLinput: displayPhotoURL)
     }
 }
