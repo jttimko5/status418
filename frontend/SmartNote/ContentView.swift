@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
     @State private var selectedImage: UIImage?
     @State private var isImagePickerDisplay = false
+    @State private var isLinkActive = false
     
 //    API TEST STUFF      =====================================================
 //    @State var message = "Some short sample text."
@@ -119,7 +120,7 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
-    @State private var keywords = ["apple", "banana", "orange"]
+    @State private var keywords = ["shoes", "pen", "cat"]
     @State private var isEditing = false
     
     var body: some View {
@@ -173,6 +174,7 @@ struct KeywordView: View {
                     Image(systemName: "plus")
                 }
             }
+            
             NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos())) {
                 Text("Search Related Photos")
                 Image(systemName: "chevron.right")
@@ -200,8 +202,22 @@ struct KeywordView: View {
         }
     }
     
-    func findPhotos() -> Array<String> {
-        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
-        return photosIdentifier
+    func getKeywords() -> Array<String> {
+        return keywords
     }
+    
+    // Use this one when completed AR View modification
+//    func findPhotos() -> Array<Array<String>> {
+//        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
+//        let videosIdentifier = showVideosForKeywords(keywords: keywords)
+//        return [photosIdentifier, videosIdentifier]
+//    }
+}
+
+
+// Delete this function after activate the one above
+func findPhotos() -> [String] {
+    let temp = KeywordView()
+    let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords())
+    return photosIdentifier
 }
