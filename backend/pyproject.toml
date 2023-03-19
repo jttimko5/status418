@@ -6,7 +6,7 @@ authors = ["tvday <55814534+tvday@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 flask = "^2.2.3"
 gunicorn = "^20.1.0"
 
