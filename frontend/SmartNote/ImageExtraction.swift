@@ -11,6 +11,7 @@ import Vision
 
 func showPhotosForKeywords(keywords: [String]) -> [String] {
     var photoURLs: [String] = []
+    var matchedCount = 0
     
     // Create a request for classifying the contents of an image
     let classifyRequest = VNClassifyImageRequest()
@@ -27,6 +28,9 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
     
     // Enumerate the fetched photos and classify their contents
     fetchResult.enumerateObjects { asset, index, pointer in
+        if matchedCount >= 7 {
+            return
+        }
         dispatchGroup.enter()
         // Request an image representation of the photo
         let options = PHImageRequestOptions()
@@ -48,6 +52,11 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
                             // Add the URL of the matching photo to the result array
                             if let assetURL = asset.value(forKey: "uniformTypeIdentifier") as? String {
                                 photoURLs.append(assetURL)
+                                matchedCount += 1
+                                if matchedCount >= 7 {
+                                    dispatchGroup.leave()
+                                    return
+                                }
                             }
                         }
                     }
