@@ -17,7 +17,7 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
     
     // Create a fetch options object to specify search criteria for the photos
     let fetchOptions = PHFetchOptions()
-    fetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
+    fetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
     
     // Fetch the photos that match the specified search criteria
     let fetchResult = PHAsset.fetchAssets(with: fetchOptions)
@@ -28,27 +28,25 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
     // Enumerate the fetched photos and classify their contents
     fetchResult.enumerateObjects { asset, index, pointer in
         dispatchGroup.enter()
-        // Request an image representation of the photo
+        // Request the image data and orientation of the photo
         let options = PHImageRequestOptions()
         options.isSynchronous = true
         options.deliveryMode = .highQualityFormat
         options.resizeMode = .exact
         options.normalizedCropRect = CGRect(x: 0.5, y: 0.5, width: 0.1, height: 0.1) // Center crop
-        PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 512, height: 512),
-                                              contentMode: .aspectFit, options: options) { image, _ in
-            if let image = image, let cgImage = image.cgImage {
-                // Perform the classification request on the image
-                let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        PHImageManager.default().requestImageDataAndOrientation(for: asset, options: options) { data, _, _, info in
+            if let data = data {
+                // Perform the classification request on the image data
+                let handler = VNImageRequestHandler(data: data, options: [:])
                 do {
                     try handler.perform([classifyRequest])
                     if let classifications = classifyRequest.results, !classifications.isEmpty {
                         // Check if the photo contains any of the specified keywords
                         let matchedKeywords = classifications.filter { keywords.contains($0.identifier.lowercased()) }
                         if !matchedKeywords.isEmpty {
-                            // Add the URL of the matching photo to the result array
-                            if let assetURL = asset.value(forKey: "uniformTypeIdentifier") as? String {
-                                photoURLs.append(assetURL)
-                            }
+                            // Add the local identifier of the matching photo to the result array
+                            let localIdentifier = asset.localIdentifier
+                            photoURLs.append(localIdentifier)
                         }
                     }
                 } catch {
@@ -64,4 +62,3 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
     
     return photoURLs
 }
-
