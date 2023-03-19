@@ -202,7 +202,6 @@ struct KeywordView: View {
     
     func findPhotos() -> Array<String> {
         let photosURL = showPhotosForKeywords(keywords: keywords)
-        let displayPhotoURL = Array(photosURL)
-        return displayPhotoURL
+        return photosURL
     }
 }
