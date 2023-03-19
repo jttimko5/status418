@@ -1,15 +1,21 @@
-from flask import Flask, jsonify, request
-from extractor.extractor import extract_keywords
+import functools
 
-app = Flask(__name__)
+from flask import (
+    Blueprint, flash, jsonify, request, session, url_for
+)
+# from werkzeug.security import check_password_hash, generate_password_hash
+
+from .extractor.extractor import extract_keywords
+
+bp = Blueprint('auth', __name__, url_prefix='/')
 
 
-@app.route('/')
+@bp.route('/')
 def hello_world():  # put application's code here
     return 'Hello World!'
 
 
-@app.route('/keywords', methods=['POST'])
+@bp.route('/keywords', methods=['POST'])
 def keywords():
     data = request.get_json(silent=True)
     if not data:
@@ -27,5 +33,5 @@ def keywords():
     return jsonify(extract_keywords(data['text'])), 200
 
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=3000)
+# if __name__ == '__main__':
+#     app.run(debug=True, host='0.0.0.0', port=3000)
