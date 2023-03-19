@@ -96,7 +96,7 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
     
     // Create a fetch options object to specify search criteria for the photos
     let fetchOptions = PHFetchOptions()
-    fetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
+    fetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
     
     // Fetch the photos that match the specified search criteria
     let fetchResult = PHAsset.fetchAssets(with: fetchOptions)
