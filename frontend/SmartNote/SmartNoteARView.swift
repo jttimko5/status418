@@ -12,7 +12,7 @@ import Photos
 import Vision
 
 struct SmartNoteARView: View {
-    var URLinput: Array<String>
+    var IdentifierInput: Array<String>
 //    @StateObject private var viewModel = SmartNoteARViewModel(
 //        urls:
 //        [
@@ -28,9 +28,9 @@ struct SmartNoteARView: View {
 //    )
     @StateObject private var viewModel: SmartNoteARViewModel
         
-    init(URLinput: Array<String>) {
-        self.URLinput = URLinput
-        self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(urls: URLinput))
+    init(IdentifierInput: Array<String>) {
+        self.IdentifierInput = IdentifierInput
+        self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput))
     }
     @Environment(\.presentationMode) var presentationMode
     
@@ -73,42 +73,81 @@ class SmartNoteARViewModel: ObservableObject {
     }
     
     // Constructor for handling multiple images from url
-    init(urls: Array<String>) {
-        for (i, url) in urls.enumerated() {
+    init(identifiers: Array<String>) {
+        for (i, identifier) in identifiers.enumerated() {
             
             //-------------------------------------------------------------------------
             // File retrieval
             // Temporary implementation. Very slow blocking code added to help test anchoring
             // Zhihao will replace with better code later
-            let remoteURL = URL(string: url)!
-            let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-            let data = try! Data(contentsOf: remoteURL)
-            try! data.write(to: fileURL)
+//            let remoteURL = URL(string: url)!
+//            let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+//            let data = try! Data(contentsOf: remoteURL)
+//            try! data.write(to: fileURL)
             //-------------------------------------------------------------------------
             
-            // Create a box mesh
-            let len = 0.2
-            let height = 0.2
-            let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
+            //Access photos by local identifiers
+            let assetResults = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
             
-            // Create a material
-            var material = SimpleMaterial()
-            let texture = try! TextureResource.load(contentsOf: fileURL)
-            material.color.texture = PhysicallyBasedMaterial.Texture(texture)
-            
-            // Create a model entity with the mesh and material
-            let entity = ModelEntity(mesh: mesh, materials: [material])
-            
-            // Create an anchor and add the entity to the scene
-            let numRows = 3
-            let row = i % numRows
-            let col = Int(i / numRows)
-            let x = 0 + ((len + 0.01) * Double(col))
-            let y = -0.5
-            let z = -0.5 + ((height + 0.01) * Double(row))
-            let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
-            anchor.addChild(entity)
-            arView.scene.addAnchor(anchor)
+            //Check whether you can find the image
+            guard let asset = assetResults.firstObject else {
+                let errorMessage = "Could not find asset with local identifier"
+                print("Could not find asset with local identifier: \(identifier)")
+                return
+            }
+            let options = PHContentEditingInputRequestOptions()
+            asset.requestContentEditingInput(with: options) { input, _ in
+                guard let imageURL = input?.fullSizeImageURL else {
+                    print("Could not retrieve image URL for asset: \(asset)")
+                    return
+                }
+                // Create a box mesh
+                let len = 0.2
+                let height = 0.2
+                let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
+                
+                // Create a material
+                var material = SimpleMaterial()
+                let texture = try! TextureResource.load(contentsOf: imageURL)
+                material.color.texture = PhysicallyBasedMaterial.Texture(texture)
+                
+                // Create a model entity with the mesh and material
+                let entity = ModelEntity(mesh: mesh, materials: [material])
+                
+                // Create an anchor and add the entity to the scene
+                let numRows = 3
+                let row = i % numRows
+                let col = Int(i / numRows)
+                let x = 0 + ((len + 0.01) * Double(col))
+                let y = -0.5
+                let z = -0.5 + ((height + 0.01) * Double(row))
+                let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
+                anchor.addChild(entity)
+                self.arView.scene.addAnchor(anchor)
+            }
+//            // Create a box mesh
+//            let len = 0.2
+//            let height = 0.2
+//            let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
+//
+//            // Create a material
+//            var material = SimpleMaterial()
+//            let texture = try! TextureResource.load(contentsOf: imageURL)
+//            material.color.texture = PhysicallyBasedMaterial.Texture(texture)
+//
+//            // Create a model entity with the mesh and material
+//            let entity = ModelEntity(mesh: mesh, materials: [material])
+//
+//            // Create an anchor and add the entity to the scene
+//            let numRows = 3
+//            let row = i % numRows
+//            let col = Int(i / numRows)
+//            let x = 0 + ((len + 0.01) * Double(col))
+//            let y = -0.5
+//            let z = -0.5 + ((height + 0.01) * Double(row))
+//            let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
+//            anchor.addChild(entity)
+//            arView.scene.addAnchor(anchor)
         }
     }
 }

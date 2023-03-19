@@ -173,7 +173,7 @@ struct KeywordView: View {
                     Image(systemName: "plus")
                 }
             }
-            NavigationLink(destination: SmartNoteARView(URLinput: findPhotos())) {
+            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos())) {
                 Text("Search Related Photos")
                 Image(systemName: "chevron.right")
             }
@@ -201,7 +201,7 @@ struct KeywordView: View {
     }
     
     func findPhotos() -> Array<String> {
-        let photosURL = showPhotosForKeywords(keywords: keywords)
-        return photosURL
+        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
+        return photosIdentifier
     }
 }
