@@ -9,6 +9,9 @@ import Foundation
 import SwiftUI
 import RealityKit
 import Photos
+import ARKit
+import AVKit
+import SpriteKit
 import Vision
 
 struct SmartNoteARView: View {
@@ -91,40 +94,50 @@ class SmartNoteARViewModel: ObservableObject {
             
             //Check whether you can find the image
             guard let asset = assetResults.firstObject else {
-                let errorMessage = "Could not find asset with local identifier"
                 print("Could not find asset with local identifier: \(identifier)")
                 return
             }
             let options = PHContentEditingInputRequestOptions()
-            asset.requestContentEditingInput(with: options) { input, _ in
-                guard let imageURL = input?.fullSizeImageURL else {
-                    print("Could not retrieve image URL for asset: \(asset)")
-                    return
+            if asset.mediaType == .image {
+                asset.requestContentEditingInput(with: options) { input, _ in
+                    guard let imageURL = input?.fullSizeImageURL else {
+                        print("Could not retrieve image URL for asset: \(asset)")
+                        return
+                    }
+                    // Create a box mesh
+                    let len = 0.2
+                    let height = 0.2
+                    let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
+                    
+                    // Create a material
+                    var material = SimpleMaterial()
+                    let texture = try! TextureResource.load(contentsOf: imageURL)
+                    material.color.texture = PhysicallyBasedMaterial.Texture(texture)
+                    
+                    // Create a model entity with the mesh and material
+                    let entity = ModelEntity(mesh: mesh, materials: [material])
+                    
+                    // Create an anchor and add the entity to the scene
+                    let numRows = 3
+                    let row = i % numRows
+                    let col = Int(i / numRows)
+                    let x = 0 + ((len + 0.01) * Double(col))
+                    let y = -0.5
+                    let z = -0.5 + ((height + 0.01) * Double(row))
+                    let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
+                    anchor.addChild(entity)
+                    self.arView.scene.addAnchor(anchor)
                 }
-                // Create a box mesh
-                let len = 0.2
-                let height = 0.2
-                let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
-                
-                // Create a material
-                var material = SimpleMaterial()
-                let texture = try! TextureResource.load(contentsOf: imageURL)
-                material.color.texture = PhysicallyBasedMaterial.Texture(texture)
-                
-                // Create a model entity with the mesh and material
-                let entity = ModelEntity(mesh: mesh, materials: [material])
-                
-                // Create an anchor and add the entity to the scene
-                let numRows = 3
-                let row = i % numRows
-                let col = Int(i / numRows)
-                let x = 0 + ((len + 0.01) * Double(col))
-                let y = -0.5
-                let z = -0.5 + ((height + 0.01) * Double(row))
-                let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
-                anchor.addChild(entity)
-                self.arView.scene.addAnchor(anchor)
             }
+// TODO: Show video in AR
+//            else if asset.mediaType == .video {
+//                VideoARView(identifier: identifier)
+//            }
+            
+            
+            
+            
+            
 //            // Create a box mesh
 //            let len = 0.2
 //            let height = 0.2
@@ -161,3 +174,58 @@ struct ARViewContainer: UIViewRepresentable {
     
     func updateUIView(_ uiView: ARView, context: Context) {}
 }
+
+
+
+//TODO: Videos show in AR!
+//class VideoARView: ObservableObject {
+//
+//    @IBOutlet weak var arView: ARSCNView!
+//
+//    let player = AVPlayer()
+//    var videoNode = SKVideoNode()
+//
+//    init() {
+//    }
+//
+//    init(identifier: String) {
+//
+//        // Replace with the local identifier of the video you want to load
+//        let localIdentifier = identifier
+//
+//        let options = PHVideoRequestOptions()
+//        options.isNetworkAccessAllowed = true
+//
+//        PHImageManager.default().requestAVAsset(forVideo: PHAsset.fetchAssets(withLocalIdentifiers: [localIdentifier], options: nil).firstObject!, options: options) { asset, _, _ in
+//            guard let asset = asset else {
+//                return
+//            }
+//
+//            DispatchQueue.main.async {
+//                self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
+//                self.videoNode = SKVideoNode(avPlayer: self.player)
+//            }
+//        }
+//
+//        let skScene = SKScene(size: CGSize(width: 1280, height: 720))
+//        skScene.addChild(videoNode)
+//
+//        let plane = SCNPlane(width: 1.0, height: 0.5)
+//        plane.firstMaterial?.isDoubleSided = true
+//        plane.firstMaterial?.diffuse.contents = skScene
+//
+//        let planeNode = SCNNode(geometry: plane)
+//        planeNode.eulerAngles.x = -.pi / 2
+//
+//        let configuration = ARWorldTrackingConfiguration()
+//        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+//
+//        arView.scene.rootNode.addChildNode(planeNode)
+//    }
+//
+//    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+//        if let videoAnchor = anchor as? ARImageAnchor, videoAnchor == arView.session.currentFrame?.anchors.first {
+//            player.play()
+//        }
+//    }
+//}
