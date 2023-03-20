@@ -1,1 +1,0 @@
-from extractor.extractor import extract_keywords

@@ -17,6 +17,6 @@ def extract_keywords(text: str) -> dict:
             'Valentine\'s Day',
             'Big House',
             'Starbucks',
-            'Crazy, Stupid, Love'
-        ]
+            'Crazy, Stupid, Love',
+        ],
     }
