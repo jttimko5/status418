@@ -120,8 +120,10 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
-    @State private var keywords = ["shoes", "pen", "cat"]
+    @State private var keywords: [String] = []
     @State private var isEditing = false
+    
+//    @ObservedObject var store = KeywordsStore.shared
     
     var body: some View {
         VStack {
@@ -203,6 +205,22 @@ struct KeywordView: View {
     }
     
     func getKeywords() -> Array<String> {
+        KeywordsStore.shared.postExtractKeywords("text", completion: {success in
+            if success {
+                keywords = KeywordsStore.shared.keywords.keywords
+                print(KeywordsStore.shared.keywords.keywords)
+            }
+            
+//            DispatchQueue.main.sync {
+//                if success {
+//                    // do something
+//
+//                }
+//                // stop the refreshing animation upon completion:
+//                // self.refreshControl?.endRefreshing()
+//            }
+        })
+        
         return keywords
     }
     
