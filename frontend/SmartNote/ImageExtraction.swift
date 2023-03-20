@@ -47,8 +47,9 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
                     if let classifications = classifyRequest.results, !classifications.isEmpty {
                         // Check if the photo contains any of the specified keywords
                         let matchedKeywords = classifications.filter {
-                            keywords.contains($0.identifier.lowercased())
+                            keywords.contains($0.identifier.lowercased()) && $0.confidence >= 0.9
                         }
+                        print(matchedKeywords)
                         if !matchedKeywords.isEmpty {
                             // Add the local identifier of the matching photo to the result array
                             let localIdentifier = asset.localIdentifier
