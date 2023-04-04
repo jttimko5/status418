@@ -15,12 +15,8 @@ struct ContentView: View {
     @State private var selectedImage: UIImage?
     @State private var isImagePickerDisplay = false
     @State private var isLinkActive = false
-    
-//    API TEST STUFF      =====================================================
-//    @State var message = "Some short sample text."
-//    private let serverUrl = "http://127.0.0.1:3000"
-//    END API TEST STUFF  =====================================================
-    
+    @State private var recognizedText: String = ""
+
     var body: some View {
         NavigationView {
             
@@ -50,67 +46,60 @@ struct ContentView: View {
                             .scaledToFit()
                             .frame(width: 100, height: 25)
                     }
-                    NavigationLink(destination: KeywordView()) {
+                    NavigationLink(destination: KeywordView(recognizedText: recognizedText), isActive: $isLinkActive) {
+                        ZStack {
                             Image(systemName: "arrow.right")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 100, height: 25)
+                            Button(action: {
+                                if let image = selectedImage {
+                                    recognizeTextFromImage(image)
+                                }
+                                self.isLinkActive = true
+                            }, label: {
+                                Color.clear
+                            })
+                            .frame(width: 100, height: 25)
+                        }
                     }
+                    //.onTapGesture {
+                        //if let image = selectedImage {
+                            //recognizeTextFromImage(image)
+                            //self.isLinkActive = true
+                        //}
+                   // }
                 }.frame(height: 100)
             }.navigationBarTitle("SmartNote")
                 .sheet(isPresented: self.$isImagePickerDisplay) {
                     ImagePickerView(selectedImage: self.$selectedImage, sourceType: self.$sourceType)
                 }
-            
-            
         }
-        
-        
-//        TESTING THE API =====================================================
-//        HStack(alignment: VerticalAlignment.top) {
-//            Text(verbatim: "TEST API ENDPOINT")
-//            TextEditor(text: $message)
-//                .padding(EdgeInsets(top: 10, leading: 18, bottom: 0, trailing: 4))
-//            Button(action: {
-//                let jsonObj = ["text": message]
-//                print(jsonObj)
-//                guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonObj) else {
-//                    print("contentView: jsonData serialization error")
-//                    return
-//                }
-//                guard let apiUrl = URL(string: serverUrl+"keywords") else {
-//                    print("postChatt: Bad URL")
-//                    return
-//                }
-//                var request = URLRequest(url: apiUrl)
-//                request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type") // request is in JSON
-//                request.httpMethod = "POST"
-//                request.httpBody = jsonData
-//                URLSession.shared.dataTask(with: request) { data, response, error in
-//                    guard let _ = data, error == nil else {
-//                        print("contentView: NETWORKING ERROR")
-//                        return
-//                    }
-//                    if let httpStatus = response as? HTTPURLResponse {
-//                        if httpStatus.statusCode != 200 {
-//                            print("contentView: HTTP STATUS: \(httpStatus.statusCode)")
-//                            return
-//                        } else {
-//                            print("Success")
-//                        }
-//                    }
-//                }.resume()
-//            }) {
-//                Image(systemName: "paperplane")
-//                    .resizable()
-//                    .scaledToFit()
-//                    .frame(width: 100, height: 25)
-//            }
-//        }
-//        END TESTING API =====================================================
-        
+    }
+    
+    private func recognizeTextFromImage(_ image: UIImage) {
+        guard let cgImage = image.cgImage else { return }
+//        guard let cgImage = imageWithText.image?.cgImage else {return}
+        let requestHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        let request = VNRecognizeTextRequest { request, error in
+            guard let observations = request.results as? [VNRecognizedTextObservation], error == nil else {
+                return
+            }
+            let recognizedStrings = observations.compactMap { observation in
+                return observation.topCandidates(1).first?.string
+            }
+            self.recognizedText = recognizedStrings.joined(separator: "\n")
+        }
+        request.recognitionLevel = .accurate
+        do {
+            try requestHandler.perform([request])
+        } catch {
+            print(error.localizedDescription)
+        }
     }
 }
+
+
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
@@ -122,6 +111,7 @@ struct KeywordView: View {
     @State private var newKeyword = ""
     @State private var keywords = ["people", "woman", "man"]
     @State private var isEditing = false
+    var recognizedText: String
     
     var body: some View {
         VStack {
@@ -145,6 +135,9 @@ struct KeywordView: View {
                 }
                 .onDelete(perform: delete)
             }
+            
+            
+            Text("Recognized text: \(recognizedText)")
             
             HStack {
                 if isEditing {
@@ -217,7 +210,7 @@ struct KeywordView: View {
 
 // Delete this function after activate the one above
 func findPhotos() -> [String] {
-    let temp = KeywordView()
+    let temp = KeywordView(recognizedText: "")
     let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords())
     return photosIdentifier
 }
