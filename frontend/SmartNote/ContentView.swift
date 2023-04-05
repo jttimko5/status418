@@ -36,6 +36,7 @@ struct ContentView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 100, height: 25)
+                            .foregroundColor(Color.blue)
                     }
                     Button(action: {
                         self.sourceType = .photoLibrary
@@ -45,30 +46,27 @@ struct ContentView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 100, height: 25)
+                            .foregroundColor(Color.blue)
                     }
-                    NavigationLink(destination: KeywordView(recognizedText: recognizedText), isActive: $isLinkActive) {
-                        ZStack {
-                            Image(systemName: "arrow.right")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 100, height: 25)
-                            Button(action: {
-                                if let image = selectedImage {
-                                    recognizeTextFromImage(image)
-                                }
-                                self.isLinkActive = true
-                            }, label: {
-                                Color.clear
-                            })
-                            .frame(width: 100, height: 25)
+                    ZStack {
+                        NavigationLink(destination: KeywordView(recognizedText: recognizedText), isActive: $isLinkActive) {
+                            EmptyView()
                         }
+                        Image(systemName: "arrow.right")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 25)
+                            .foregroundColor(Color.blue)
+                            .opacity(selectedImage == nil ? 0.2 : 1.0) // make the arrow image transparent when no image is selected
+                            .onTapGesture {
+                                if selectedImage != nil {
+                                    if let image = selectedImage {
+                                        recognizeTextFromImage(image)
+                                    }
+                                    self.isLinkActive = true
+                                }
+                            }
                     }
-                    //.onTapGesture {
-                        //if let image = selectedImage {
-                            //recognizeTextFromImage(image)
-                            //self.isLinkActive = true
-                        //}
-                   // }
                 }.frame(height: 100)
             }.navigationBarTitle("SmartNote")
                 .sheet(isPresented: self.$isImagePickerDisplay) {
@@ -98,6 +96,7 @@ struct ContentView: View {
         }
     }
 }
+
 
 
 
