@@ -35,6 +35,10 @@ struct SmartNoteARView: View {
         self.IdentifierInput = IdentifierInput
         self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput))
     }
+    init(IdentifierInput: Array<String>, fitnessdata: String) {
+        self.IdentifierInput = IdentifierInput
+        self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput, fitnessdata: fitnessdata))
+    }
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -78,16 +82,6 @@ class SmartNoteARViewModel: ObservableObject {
     // Constructor for handling multiple images from url
     init(identifiers: Array<String>) {
         for (i, identifier) in identifiers.enumerated() {
-            
-            //-------------------------------------------------------------------------
-            // File retrieval
-            // Temporary implementation. Very slow blocking code added to help test anchoring
-            // Zhihao will replace with better code later
-//            let remoteURL = URL(string: url)!
-//            let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-//            let data = try! Data(contentsOf: remoteURL)
-//            try! data.write(to: fileURL)
-            //-------------------------------------------------------------------------
             
             //Access photos by local identifiers
             let assetResults = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
@@ -133,36 +127,78 @@ class SmartNoteARViewModel: ObservableObject {
 //            else if asset.mediaType == .video {
 //                VideoARView(identifier: identifier)
 //            }
-            
-            
-            
-            
-            
-//            // Create a box mesh
-//            let len = 0.2
-//            let height = 0.2
-//            let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
-//
-//            // Create a material
-//            var material = SimpleMaterial()
-//            let texture = try! TextureResource.load(contentsOf: imageURL)
-//            material.color.texture = PhysicallyBasedMaterial.Texture(texture)
-//
-//            // Create a model entity with the mesh and material
-//            let entity = ModelEntity(mesh: mesh, materials: [material])
-//
-//            // Create an anchor and add the entity to the scene
-//            let numRows = 3
-//            let row = i % numRows
-//            let col = Int(i / numRows)
-//            let x = 0 + ((len + 0.01) * Double(col))
-//            let y = -0.5
-//            let z = -0.5 + ((height + 0.01) * Double(row))
-//            let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
-//            anchor.addChild(entity)
-//            arView.scene.addAnchor(anchor)
         }
     }
+    init(identifiers: Array<String>, fitnessdata: String) {
+        for (i, identifier) in identifiers.enumerated() {
+            
+            //Access photos by local identifiers
+            let assetResults = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
+            
+            //Check whether you can find the image
+            guard let asset = assetResults.firstObject else {
+                print("Could not find asset with local identifier: \(identifier)")
+                return
+            }
+            let options = PHContentEditingInputRequestOptions()
+            if asset.mediaType == .image {
+                asset.requestContentEditingInput(with: options) { input, _ in
+                    guard let imageURL = input?.fullSizeImageURL else {
+                        print("Could not retrieve image URL for asset: \(asset)")
+                        return
+                    }
+                    // Create a box mesh
+                    let len = 0.2
+                    let height = 0.2
+                    let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
+                    
+                    // Create a material
+                    var material = SimpleMaterial()
+                    let texture = try! TextureResource.load(contentsOf: imageURL)
+                    material.color.texture = PhysicallyBasedMaterial.Texture(texture)
+                    
+                    // Create a model entity with the mesh and material
+                    let entity = ModelEntity(mesh: mesh, materials: [material])
+                    
+                    // Create an anchor and add the entity to the scene
+                    let numRows = 3
+                    let row = i % numRows
+                    let col = Int(i / numRows)
+                    let x = 0 + ((len + 0.01) * Double(col))
+                    let y = -0.5
+                    let z = -0.5 + ((height + 0.01) * Double(row))
+                    let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
+                    anchor.addChild(entity)
+                    self.arView.scene.addAnchor(anchor)
+                }
+            }
+// TODO: Show video in AR
+//            else if asset.mediaType == .video {
+//                VideoARView(identifier: identifier)
+//            }
+        }
+        if fitnessdata.isEmpty == false {
+            let textEntity = Entity()
+            let textMesh = MeshResource.generateText(fitnessdata, extrusionDepth: 0.01)
+            let textMaterial = SimpleMaterial(color: .orange, roughness: 0.5, isMetallic: false)
+            let textModel = ModelEntity(mesh: textMesh, materials: [textMaterial])
+            textEntity.addChild(textModel)
+            
+            // Set the font and font size for the text
+            textModel.scale = SIMD3<Float>(repeating: 0.01)
+            textModel.position.y += 0.1
+            
+            // Position the text entity in the scene
+            let initialPosition = SIMD3<Float>(-1, -1, -1)
+            let anchor = AnchorEntity(world: initialPosition)
+            anchor.addChild(textEntity)
+            
+            // Add the anchor to the ARView's scene
+            arView.scene.addAnchor(anchor)
+            // Add interaction
+            
+        }
+        }
 }
 
 struct ARViewContainer: UIViewRepresentable {

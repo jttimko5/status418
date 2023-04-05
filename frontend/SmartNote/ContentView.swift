@@ -14,6 +14,8 @@ struct ContentView: View {
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
     @State private var selectedImage: UIImage?
     @State private var isImagePickerDisplay = false
+    @State private var isLinkActive = false
+
     
 //    API TEST STUFF      =====================================================
 //    @State var message = "Some short sample text."
@@ -119,7 +121,7 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
-    @State private var keywords = ["apple", "banana", "orange"]
+    @State private var keywords = ["12/31/2022", "01/10/2023", "cat", "people", "fireworks", "QR code", "statue"]
     @State private var isEditing = false
     
     var body: some View {
@@ -173,7 +175,8 @@ struct KeywordView: View {
                     Image(systemName: "plus")
                 }
             }
-            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos())) {
+            
+            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos(), fitnessdata: "steps walked: \n1190 steps")) {
                 Text("Search Related Photos")
                 Image(systemName: "chevron.right")
             }
@@ -195,13 +198,27 @@ struct KeywordView: View {
     }
     
     func delete(at offsets: IndexSet) {
-        withAnimation {
-            keywords.remove(atOffsets: offsets)
+            withAnimation {
+                keywords.remove(atOffsets: offsets)
+            }
         }
+        
+        func getKeywords() -> Array<String> {
+            return keywords
+        }
+        
+        // Use this one when completed AR View modification
+    //    func findPhotos() -> Array<Array<String>> {
+    //        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
+    //        let videosIdentifier = showVideosForKeywords(keywords: keywords)
+    //        return [photosIdentifier, videosIdentifier]
+    //    }
     }
-    
-    func findPhotos() -> Array<String> {
-        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
+
+
+    // Delete this function after activate the one above
+    func findPhotos() -> [String] {
+        let temp = KeywordView()
+        let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords())
         return photosIdentifier
     }
-}
