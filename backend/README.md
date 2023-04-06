@@ -17,6 +17,9 @@
 
 Install using poetry: `poetry install`
 
+Make sure you have your OpenAI API key set as an env variable:
+- In bash/zsh profile, add `export OPENAI_API_KEY="sk-..."`
+
 To run:
 - Activate python shell: `poetry shell`
 - Run flask: `flask --app backend run --port=8000`
