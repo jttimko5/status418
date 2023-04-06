@@ -1,9 +1,9 @@
 import functools
+import logging
 
 from flask import (
-    Blueprint, flash, jsonify, request, session, url_for
+    Blueprint, jsonify, request
 )
-# from werkzeug.security import check_password_hash, generate_password_hash
 
 from .extractor.extractor import extract_keywords
 

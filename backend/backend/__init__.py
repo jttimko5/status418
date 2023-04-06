@@ -1,6 +1,38 @@
 import os
+from logging.config import dictConfig
 
 from flask import Flask
+
+# Create and configure logger
+# logging.basicConfig(filename="newfile.log",
+#                     encoding='utf-8',
+#                     level=logging.DEBUG,
+#                     format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+
+dictConfig({
+    'version': 1,
+    'formatters': {
+        'default': {
+            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+        }},
+    'handlers': {
+        'wsgi': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://flask.logging.wsgi_errors_stream',
+            'formatter': 'default'
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'backend.log',
+            'encoding': 'utf-8',
+            'formatter': 'default'
+        }
+    },
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
 
 
 def create_app(test_config=None):

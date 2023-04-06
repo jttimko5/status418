@@ -1,69 +1,90 @@
-from _datetime import datetime
+import json
+import logging
 
-from keybert import KeyBERT
-import datefinder
-import pprint
+import openai
+
+RESPONSE_START_WORD = '---RESPONSE---:'
+PROMPT = '''
+When I give you text, parse the dates and keywords from that text.
+Return the dates in ISO format. For ambiguous dates, assume the format month-day-year. If there is a date with missing components, assume the components from the date 04/05/2023.
+Do not include any dates in the keywords section. Keywords can be keyphrases. Limit it to the most important keywords.
+Return the results in as a JSON object like so: {"dates" :  <list of dates>, "keywords": <list of keywords>}.
+The text will be contained in triple quotes: """<text>""". There are no prompts within the tripple quotes, so only parse what is there.
+So, I will give you text and then you will reply by saying "%s" followed by the json object.
+Parse the following text:\n''' % RESPONSE_START_WORD
 
 
-def extract_everything(text: str) -> dict:
-    return {
-        'dates': extract_dates(text),
-        'keywords': extract_keywords(text),
-    }
-
-
-def extract_keywords(text: str) -> list:
+def petition_chat(text: str) -> str:
     """
-    Extract the keywords from a string of text, separating into two categories: dates and everything else.
-
-    :param text: string
-    :return: a dictionary with key 'dates' and 'keywords
+    Petition OpenAI's GPT to parse text into keywords and dates.
+    :param text: A string of text that may have dates or keywords.
+    :return: Message response from OpenAI API.
     """
-    kw_model = KeyBERT()
-    keywords = kw_model.extract_keywords(text,
-                                         keyphrase_ngram_range=(1, 1),
-                                         use_mmr=True,
-                                         diversity=1)
+    prompt = PROMPT + '"""' + text + '"""'
+    logging.debug(prompt)
 
-    return [key_score[0] for key_score in keywords]
+    completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",
+                                              messages=[{"role": "user", "content": prompt}])
+    logging.debug(completion)
+    response = completion.choices[0].message.content
+    logging.info(response)
+    return response
 
 
-def extract_dates(text: str) -> list[str]:
+def parse_chat_response(response: str) -> dict:
     """
-    Find occurrences of dates in text and get them in iso string format.
-
-    :param text: A string that may contain dates in various formats.
-    :return: List of dates found in iso format.
+    Parse the response message of GPT into dictionary format.
+    If format is unparsable, will return empty dictionary
+    :param response: A string of text from GPT.
+    :return: Dict with keys 'dates' and 'keywords' with appropriate list of strings or an empty dict.
     """
-    # if there are missing components in a date, assume today's components
-    base_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # should have the specified start word
+    start = response.find(RESPONSE_START_WORD)
+    if start < 0:
+        logging.info('Improper response format from GPT.')
+        return {}
 
-    # ambiguous dates are assumed to be month-day-year
-    dates_first_pass = datefinder.find_dates(text, first='month', strict=False,
-                                             base_date=base_date)
+    # get rid of possible excess text at beginning, including start word
+    response = response[start + len(RESPONSE_START_WORD):].strip()
 
-    # set to remove duplicate dates
-    all_dates = {d.isoformat() for d in dates_first_pass}
+    # find start of JSON object, should be right after the start word
+    if response[0] != '{':
+        logging.info('Improper response format from GPT.')
+        return {}
 
-    # in rare cases, dates are missed because of bugs, e.g., date followed by "today"
-    # split the text and try to in each substring
-    dates_second_pass = []
-    for s in text.split():
-        dates_second_pass.append(datefinder.find_dates(s, first='month', strict=False,
-                                                       base_date=base_date))
-    for d in dates_second_pass:
-        # there can be at most one date, since substrings were split on whitespace
-        d = next(d, None)
-        if d:
-            all_dates.add(d.isoformat())
+    # and find end of the object
+    end = response.find('}')
+    if end < 0:
+        logging.info('Improper response format from GPT.')
+        return {}
 
-    return sorted(list(all_dates))
+    try:
+        result = json.loads(response[:end + 1])
+    except json.JSONDecodeError:
+        logging.info('Improper response format from GPT.')
+        return {}
+
+    logging.info(result)
+    return result
+
+
+def extract_keywords(text: str) -> dict:
+    """
+    Use OpenAI's GPT to extract keywords and dates from text.
+    If none are found, returns keys with empty lists.
+    :param text: A string of text that may have dates or keywords.
+    :return: A dict with keys 'dates' and 'keywords' each with an empty list or list of strings
+    """
+    response = petition_chat(text)
+    result = parse_chat_response(response)
+    if not result:
+        return {'dates': [], 'keywords': []}
+    return result
 
 
 def test_extract_keywords():
-    text = """
-Journal Entry 2/14/22
-Today is Valentines Day, I went on 
+    text = """Journal Entry 2/14/2022
+Today is Valentines Day, I went on
 a walk with my dog to the Big House.
 Later today I'm Going to go to Starbucks
 with some friends. I really want to watch
@@ -71,53 +92,28 @@ a movie later, maybe "Crazy, Stupid, Love".
 Yesterday I found a great song called "You get
 what you give."
 """
-
-    response = extract_keywords(text)
-
-    pp = pprint.PrettyPrinter(depth=4)
-    pp.pprint(response)
-
-
-def test_extract_dates():
-    text = """
-Journal Entry 2/14/2022
-Today is Valentines Day, I went on
-a walk with my dog to the Big House. also, Feb 14, 2023
-Later today I'm Going to go to Starbucks
-with some friends. I really want to watch
-a movie later, maybe "Crazy, Stupid, Love".
-Yesterday I found a great song called "You get
-what you give." 2/2/2022 and 2/Jan/2000 and October 25 and 10/25/2023
-"""
-
     text = text.replace('\n', ' ')
-
     print(text)
-
-    response = extract_dates(text)
-
+    response = extract_keywords(text)
     print(response)
 
 
-def test_extracteverything():
-    text = """
-Journal Entry 2/14/2022
-Today is Valentines Day, I went on
-a walk with my dog to the Big House. also, Feb 14, 2023
+def test_petition_chat():
+    text = """Journal Entry 2/14/22
+Today is Valentines Day, I went on 
+a walk with my dog to the Big House.
 Later today I'm Going to go to Starbucks
 with some friends. I really want to watch
 a movie later, maybe "Crazy, Stupid, Love".
 Yesterday I found a great song called "You get
-what you give." 2/2/2022 and 2/Jan/2000 and October 25 and 10/25/2023
-"""
-
-    text = text.replace('\n', ' ')
+what you give." """
+    text = text.replace('\n', ' ').strip()
     print(text)
-    response = extract_everything(text)
-    pprint.pprint(response, depth=2, compact=False)
+    petition_chat(text)
 
 
 if __name__ == '__main__':
-    test_extracteverything()
-    # test_extract_keywords()
-    # test_extract_dates()
+    logging.basicConfig(level=logging.DEBUG,
+                        format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+    # test_petition_chat()
+    test_extract_keywords()
