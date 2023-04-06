@@ -1,3 +1,4 @@
+import logging
 import os
 from logging.config import dictConfig
 
@@ -9,28 +10,52 @@ from flask import Flask
 #                     level=logging.DEBUG,
 #                     format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
 
+
+class FilterModule(logging.Filter):
+    def __init__(self, module_name=None):
+        self.module_name = module_name
+
+    def filter(self, record):
+        if self.module_name is None:
+            return True
+        else:
+            # disallow all logs coming from module_name
+            return record.module != self.module_name
+
 dictConfig({
     'version': 1,
     'formatters': {
         'default': {
-            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+            'format': '[%(asctime)s] %(name)s - %(levelname)s in %(module)s: %(message)s',
         }},
+    'filters': {
+        'filterExtractor': {
+            '()': FilterModule,
+            'module_name': 'extractor',
+        },
+        'filter_internal': {
+            '()': FilterModule,
+            'module_name': '_internal',
+        }
+    },
     'handlers': {
         'wsgi': {
             'class': 'logging.StreamHandler',
             'stream': 'ext://flask.logging.wsgi_errors_stream',
-            'formatter': 'default'
+            'formatter': 'default',
+            'filters': ['filterExtractor']
         },
         'file': {
             'class': 'logging.FileHandler',
             'filename': 'backend.log',
             'encoding': 'utf-8',
-            'formatter': 'default'
+            'formatter': 'default',
+            'filters': ['filter_internal']
         }
     },
     'root': {
         'level': 'INFO',
-        'handlers': ['wsgi']
+        'handlers': ['wsgi', 'file']
     }
 })
 

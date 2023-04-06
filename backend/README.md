@@ -20,5 +20,6 @@ Install using poetry: `poetry install`
 To run:
 - Activate python shell: `poetry shell`
 - Run flask: `flask --app backend run --port=8000`
-- Run flask in debug mode: `flask --app backend run --port=8000 --debug`
+- Or run flask in debug mode: `flask --app backend run --port=8000 --debug`
+- Or without activating the shell: `poetry run flask --app backend run --port=8000`
     

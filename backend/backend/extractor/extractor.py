@@ -4,8 +4,7 @@ import logging
 import openai
 
 RESPONSE_START_WORD = '---RESPONSE---:'
-PROMPT = '''
-When I give you text, parse the dates and keywords from that text.
+PROMPT = '''When I give you text, parse the dates and keywords from that text.
 Return the dates in ISO format. For ambiguous dates, assume the format month-day-year. If there is a date with missing components, assume the components from the date 04/05/2023.
 Do not include any dates in the keywords section. Keywords can be keyphrases. Limit it to the most important keywords.
 Return the results in as a JSON object like so: {"dates" :  <list of dates>, "keywords": <list of keywords>}.
@@ -21,13 +20,14 @@ def petition_chat(text: str) -> str:
     :return: Message response from OpenAI API.
     """
     prompt = PROMPT + '"""' + text + '"""'
-    logging.debug(prompt)
+    logging.info('User\'s text: %s' % text)
+    logging.debug('Prompt to GPT: %s' % prompt)
 
     completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",
                                               messages=[{"role": "user", "content": prompt}])
-    logging.debug(completion)
+    logging.debug('Completion: %s' % completion)
     response = completion.choices[0].message.content
-    logging.info(response)
+    logging.info('Response from GPT: %s' % response)
     return response
 
 
@@ -64,7 +64,7 @@ def parse_chat_response(response: str) -> dict:
         logging.info('Improper response format from GPT.')
         return {}
 
-    logging.info(result)
+    logging.info('Extracted Result: %s' % result)
     return result
 
 
