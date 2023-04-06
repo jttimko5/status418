@@ -9,7 +9,6 @@ import SwiftUI
 import Photos
 import Vision
 
-
 func photoAnalyzePerformer(fetchOptions: PHFetchOptions, keywords: [String],
                            currentMatch: Int, currentSearch: Int) -> (Int, Int, [String]) {
     var matchedCount = currentMatch
@@ -73,10 +72,56 @@ func photoAnalyzePerformer(fetchOptions: PHFetchOptions, keywords: [String],
 }
 
 
+func returnImagesForDate(fetchOptions: PHFetchOptions) -> (Int, [String]) {
+    let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+    var photoURLs: [String] = []
+    var count = 0
+    
+    if fetchResult.count > 5 {
+        // Generate 5 random indexes
+        var randomIndexes: Set<Int> = []
+        while randomIndexes.count < 5 {
+            let randomIndex = Int.random(in: 0..<fetchResult.count)
+            randomIndexes.insert(randomIndex)
+        }
+        
+        // Loop through the fetch result and retrieve the images
+        fetchResult.enumerateObjects { (asset, index, stop) in
+            if randomIndexes.contains(index) {
+                let requestOptions = PHImageRequestOptions()
+                requestOptions.isSynchronous = true
+                requestOptions.deliveryMode = .highQualityFormat
+                requestOptions.resizeMode = .exact
+                
+                photoURLs.append(asset.localIdentifier)
+                count += 1
+            }
+            if count >= 5 {
+                stop.pointee = true
+            }
+        }
+    } else {
+        // Loop through the fetch result and retrieve the images
+        fetchResult.enumerateObjects { (asset, index, stop) in
+            let requestOptions = PHImageRequestOptions()
+            requestOptions.isSynchronous = true
+            requestOptions.deliveryMode = .highQualityFormat
+            requestOptions.resizeMode = .exact
+            
+            photoURLs.append(asset.localIdentifier)
+            count += 1
+        }
+    }
+
+    return (count, photoURLs)
+}
+
+
 func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
     var photoURLs: [String] = []
     var matchedCount = 0
     var totalSearch = 0
+    var totalReturn = 0
     
     var dates: [Date] = []
     for date in time {
@@ -87,16 +132,28 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
     }
     
     for date in dates {
-        let predicate = NSPredicate(format: "creationDate == %@", date as NSDate)
+        let start = Calendar.current.startOfDay(for: date)
+        let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
         let fetchOptions = PHFetchOptions()
-        fetchOptions.predicate = predicate
-        let analyzeResults = photoAnalyzePerformer(fetchOptions: fetchOptions, keywords: keywords,
-                                                   currentMatch: matchedCount, currentSearch: totalSearch)
-        matchedCount = analyzeResults.0
-        totalSearch = analyzeResults.1
-        photoURLs += analyzeResults.2
-        if matchedCount >= keywords.count || totalSearch >= 500 {
-            return photoURLs
+        fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate < %@", start as NSDate, end as NSDate)
+        let maxReturn = dates.count * 5
+        
+        if keywords.isEmpty {
+            let analyzeResults = returnImagesForDate(fetchOptions: fetchOptions)
+            totalReturn += analyzeResults.0
+            photoURLs += analyzeResults.1
+            if totalReturn >= maxReturn {
+                return photoURLs
+            }
+        } else {
+            let analyzeResults = photoAnalyzePerformer(fetchOptions: fetchOptions, keywords: keywords,
+                                                       currentMatch: matchedCount, currentSearch: totalSearch)
+            matchedCount = analyzeResults.0
+            totalSearch = analyzeResults.1
+            photoURLs += analyzeResults.2
+            if matchedCount >= keywords.count || totalSearch >= 500 {
+                return photoURLs
+            }
         }
     }
     
@@ -104,6 +161,10 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
     let fetchOptions = PHFetchOptions()
     
     if !dates.isEmpty {
+        if keywords.isEmpty {
+            return photoURLs
+        }
+        
         var oldestDate = Date()
         var newestDate = Date()
         let calendar = Calendar.current
@@ -123,9 +184,19 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
         } else {
             oldestDate = calendar.date(byAdding: .day, value: -5, to: dates[0])!
         }
+
+        var predicates: [NSPredicate] = []
+        for date in dates {
+            let exclusionStartDate = calendar.startOfDay(for: date)
+            let exclusionEndDate = calendar.date(byAdding: .day, value: 1, to: exclusionStartDate)!
+            let predicate = NSPredicate(format: "creationDate < %@ OR creationDate >= %@",
+                                        exclusionStartDate as NSDate, exclusionEndDate as NSDate)
+            predicates.append(predicate)
+        }
+        predicates.append(NSPredicate(format: "creationDate >= %@ AND creationDate <= %@",
+                                      oldestDate as NSDate, newestDate as NSDate))
+        fetchOptions.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
         
-        fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate <= %@ AND NOT (creationDate IN %@)",
-                                             oldestDate as NSDate, newestDate as NSDate, dates as NSArray)
     } else {
         fetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
@@ -144,7 +215,6 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
 
     return photoURLs
 }
-
 
 
 // Video part still under working

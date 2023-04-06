@@ -120,8 +120,8 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
-    @State private var dates: [String] = []
-    @State private var keywords: [String] = ["cat", "people", "fireworks", "QR code", "statue", "car"]
+    @State private var dates: [String] = ["12/31/2022", "12/21/2022"]
+    @State private var keywords: [String] = []
     @State private var isEditing = false
     
     var body: some View {
