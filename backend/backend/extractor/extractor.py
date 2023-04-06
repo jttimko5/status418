@@ -83,6 +83,7 @@ def extract_keywords(text: str) -> dict:
 
 
 def test_extract_keywords():
+    print('---TESTING extract_keywords---')
     text = """Journal Entry 2/14/2022
 Today is Valentines Day, I went on
 a walk with my dog to the Big House.
@@ -93,12 +94,12 @@ Yesterday I found a great song called "You get
 what you give."
 """
     text = text.replace('\n', ' ')
-    print(text)
     response = extract_keywords(text)
     print(response)
 
 
 def test_petition_chat():
+    print('---TESTING petition_chat---')
     text = """Journal Entry 2/14/22
 Today is Valentines Day, I went on 
 a walk with my dog to the Big House.
@@ -108,12 +109,11 @@ a movie later, maybe "Crazy, Stupid, Love".
 Yesterday I found a great song called "You get
 what you give." """
     text = text.replace('\n', ' ').strip()
-    print(text)
     petition_chat(text)
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
-    # test_petition_chat()
+    test_petition_chat()
     test_extract_keywords()
