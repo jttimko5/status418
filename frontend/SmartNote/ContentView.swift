@@ -26,7 +26,6 @@ struct ContentView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                 }
-                
                 Spacer()
                 HStack (alignment: .bottom){
                     Button(action: {

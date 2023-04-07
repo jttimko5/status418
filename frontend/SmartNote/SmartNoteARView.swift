@@ -11,17 +11,17 @@ import RealityKit
 
 struct SmartNoteARView: View {
     @StateObject private var viewModel = SmartNoteARViewModel(
-        urls:
-        [
-            // Random test URLs
-            "https://www.applesfromny.com/wp-content/uploads/2020/06/SnapdragonNEW.png",
-            "https://www.applesfromny.com/wp-content/uploads/2020/08/Evercrisp_NYAS-Apples2.png",
-            "https://upload.wikimedia.org/wikipedia/commons/1/15/Red_Apple.jpg",
-            "https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png",
-            "https://www.applesfromny.com/wp-content/uploads/2020/08/Evercrisp_NYAS-Apples2.png",
-            "https://upload.wikimedia.org/wikipedia/commons/1/15/Red_Apple.jpg",
-            "https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png"
-        ]
+//        urls:
+//        [
+//            // Random test URLs
+//            "https://www.applesfromny.com/wp-content/uploads/2020/06/SnapdragonNEW.png",
+//            "https://www.applesfromny.com/wp-content/uploads/2020/08/Evercrisp_NYAS-Apples2.png",
+//            "https://upload.wikimedia.org/wikipedia/commons/1/15/Red_Apple.jpg",
+//            "https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png",
+//            "https://www.applesfromny.com/wp-content/uploads/2020/08/Evercrisp_NYAS-Apples2.png",
+//            "https://upload.wikimedia.org/wikipedia/commons/1/15/Red_Apple.jpg",
+//            "https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png"
+//        ]
     )
     @Environment(\.presentationMode) var presentationMode
     
@@ -56,12 +56,60 @@ class SmartNoteARViewModel: ObservableObject {
         // Create a model entity with the mesh and material
         let entity = ModelEntity(mesh: mesh, materials: [material])
         
+        // Add collision component
+        let collisionShape = ShapeResource.generateBox(size: [0.2, 0.0001, 0.2])
+        let collisionComponent = CollisionComponent(shapes: [collisionShape])
+        entity.components.set([
+            collisionComponent
+        ])
+        
         // Create an anchor and add the entity to the scene
         let anchor = AnchorEntity(world: [0, -0.5, -0.5])
         anchor.addChild(entity)
         arView.scene.addAnchor(anchor)
+        
+        // Add swipe gesture recognizer
+        let swipeGestureRecognizer = MaterialSwipeGestureRecognizer(
+            target: self,
+            action: #selector(handleSwipe(_:)),
+            entity: entity
+        )
+        arView.addGestureRecognizer(swipeGestureRecognizer)
     }
-    
+
+    @objc func handleSwipe(_ recognizer: MaterialSwipeGestureRecognizer) {
+        guard var modelEntity = recognizer.entity else { return }
+        
+        // hit test
+        let touchLocation = recognizer.location(in: arView)
+        print(touchLocation)
+        let hitTestResults = arView.hitTest(touchLocation)
+        print(hitTestResults)
+        var found = false
+        for result in hitTestResults {
+            if result.entity == modelEntity {
+                found = true
+            }
+        }
+        if !found { return }
+
+        print("handling swipe")
+        let imageName = recognizer.imageNames[recognizer.imageIdx % recognizer.imageNames.count]
+        recognizer.imageIdx += 1
+
+        if var modelComponent = modelEntity.components[ModelComponent.self] as? ModelComponent {
+            for (index, material) in modelComponent.materials.enumerated() {
+                if var simpleMaterial = material as? SimpleMaterial {
+                    // Update the texture of the existing material
+                    simpleMaterial.color.texture = .init(try! .load(named: imageName))
+                    modelComponent.materials[index] = simpleMaterial
+                }
+            }
+            // Apply the updated materials to the model entity
+            modelEntity.components[ModelComponent.self] = modelComponent
+        }
+        
+    }
     // Constructor for handling multiple images from url
     init(urls: Array<String>) {
         for (i, url) in urls.enumerated() {
@@ -113,3 +161,13 @@ struct ARViewContainer: UIViewRepresentable {
     func updateUIView(_ uiView: ARView, context: Context) {}
 }
 
+class MaterialSwipeGestureRecognizer: UISwipeGestureRecognizer {
+    var entity: ModelEntity?
+    let imageNames = ["petergriffin", "amongus"]
+    var imageIdx = 0
+
+    convenience init(target: Any?, action: Selector?, entity: ModelEntity) {
+        self.init(target: target, action: action)
+        self.entity = entity
+    }
+}
