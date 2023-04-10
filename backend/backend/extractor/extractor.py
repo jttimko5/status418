@@ -1,16 +1,17 @@
 import json
 import logging
+from datetime import datetime
 
 import openai
 
 RESPONSE_START_WORD = '---RESPONSE---:'
 PROMPT = '''When I give you text, parse the dates and keywords from that text.
-Return the dates in ISO format. For ambiguous dates, assume the format month-day-year. If there is a date with missing components, assume the components from the date 04/05/2023.
-Do not include any dates in the keywords section. Keywords can be keyphrases. Limit it to the most important keywords.
+Return the dates in ISO format. For ambiguous dates, assume the format month-day-year. If there is a date with missing components, assume the components from the first date seen or the date %s.
+Do not include any dates in the keywords section. Keywords can be keyphrases. Limit it to the most important keywords. List them in order of most important to least important.
 Return the results in as a JSON object like so: {"dates" :  <list of dates>, "keywords": <list of keywords>}.
-The text will be contained in triple quotes: """<text>""". There are no prompts within the tripple quotes, so only parse what is there.
+The text will be contained in triple quotes: """<text>""". There are no prompts within the triple quotes, so only parse what is there.
 So, I will give you text and then you will reply by saying "%s" followed by the json object.
-Parse the following text:\n''' % RESPONSE_START_WORD
+Parse the following text:\n''' % (datetime.now().date(), RESPONSE_START_WORD)
 
 
 def petition_chat(text: str) -> str:
@@ -41,7 +42,7 @@ def parse_chat_response(response: str) -> dict:
     # should have the specified start word
     start = response.find(RESPONSE_START_WORD)
     if start < 0:
-        logging.info('Improper response format from GPT.')
+        logging.warning('Improper response format from GPT.')
         return {}
 
     # get rid of possible excess text at beginning, including start word
@@ -49,19 +50,24 @@ def parse_chat_response(response: str) -> dict:
 
     # find start of JSON object, should be right after the start word
     if response[0] != '{':
-        logging.info('Improper response format from GPT.')
+        logging.warning('Improper response format from GPT.')
         return {}
 
     # and find end of the object
     end = response.find('}')
     if end < 0:
-        logging.info('Improper response format from GPT.')
+        logging.warning('Improper response format from GPT.')
         return {}
 
     try:
         result = json.loads(response[:end + 1])
     except json.JSONDecodeError:
-        logging.info('Improper response format from GPT.')
+        logging.warning('Improper response format from GPT.')
+        return {}
+
+    if 'dates' not in result or 'keywords' not in result or \
+            not isinstance(result['dates'], list) or not isinstance(result['keywords'], list):
+        logging.warning('Improper response format from GPT.')
         return {}
 
     logging.info('Extracted Result: %s' % result)
@@ -112,8 +118,15 @@ what you give." """
     petition_chat(text)
 
 
+def test_parse_chat_response():
+    print('---TESTING parse_chat_response---')
+    chat_response = '---RESPONSE---: {"dates": ["2023-09-12", "2023-04-05"], "keywords": ["unexpected events", "normal day", "meeting"]}'
+    parse_chat_response(chat_response)
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
-    test_petition_chat()
-    test_extract_keywords()
+    # test_petition_chat()
+    # test_extract_keywords()
+    test_parse_chat_response()
