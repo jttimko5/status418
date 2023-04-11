@@ -77,32 +77,7 @@ def news():
                 'error': 'Date or dates not in ISO format.'
             }), 400
 
-    # result = get_news(dates)
-    result = [{
-        'link': 'https://news.google.com/rss/articles/CBMiQmh0dHBzOi8vdGltZS5jb20vNDY2OTYxNC92YWxlbnRpbmVzLWRheS1raW0tam9uZy11bi1taWNoYWVsLWZseW5uL9IBS2h0dHBzOi8vdGltZS5jb20vNDY2OTYxNC92YWxlbnRpbmVzLWRheS1raW0tam9uZy11bi1taWNoYWVsLWZseW5uLz9hbXA9dHJ1ZQ?oc=5',
-        'source': 'TIME',
-        'title': "The Morning Brief: Michael Flynn's Resignation, Kim Jong Un's "
-                 "Half-Brother's Death and Valentine’s Day - TIME"},
-        {
-            'link': 'https://news.google.com/rss/articles/CBMiS2h0dHBzOi8vd3d3LnBvbGl0aWNvLmNvbS9zdG9yeS8yMDE3LzAyL2Zha2UtbmV3cy1tb3ZpZS1jdXJlLXdlbGxuZXNzLTIzNTAxN9IBVWh0dHBzOi8vd3d3LnBvbGl0aWNvLmNvbS9zdG9yeS8yMDE3LzAyL2Zha2UtbmV3cy1tb3ZpZS1jdXJlLXdlbGxuZXNzLTIzNTAxNz9fYW1wPXRydWU?oc=5',
-            'source': 'POLITICO',
-            'title': 'Fake news stories promote a movie about a fake spa - POLITICO'},
-        {
-            'link': 'https://news.google.com/rss/articles/CBMiXGh0dHBzOi8vbmV3cy53dHR3LmNvbS8yMDE3LzAyLzE0L2J1enpmZWVkLWVkaXRvci1ob3ctbGl2ZS13b3JsZC1taXNpbmZvcm1hdGlvbi1hbmQtZmFrZS1uZXdz0gEA?oc=5',
-            'source': 'WTTW News',
-            'title': 'BuzzFeed Editor: How to Live in a World of Misinformation and Fake '
-                     '... - WTTW News'},
-        {
-            'link': 'https://news.google.com/rss/articles/CBMiVGh0dHBzOi8vbmV3cy5jb3JuZWxsLmVkdS9zdG9yaWVzLzIwMTcvMDIvc2NobG9tLWVsZWN0ZWQtbmF0aW9uYWwtYWNhZGVteS1lbmdpbmVlcmluZ9IBAA?oc=5',
-            'source': 'Cornell Chronicle',
-            'title': 'Schlom elected to National Academy of Engineering | Cornell ... - '
-                     'Cornell Chronicle'},
-        {
-            'link': 'https://news.google.com/rss/articles/CBMiNWh0dHBzOi8vd3d3LmJiYy5jb20vbmV3cy9zY2llbmNlLWVudmlyb25tZW50LTM4OTcxNTA00gE5aHR0cHM6Ly93d3cuYmJjLmNvbS9uZXdzL3NjaWVuY2UtZW52aXJvbm1lbnQtMzg5NzE1MDQuYW1w?oc=5',
-            'source': 'BBC',
-            'title': 'First live birth evidence in dinosaur relative - BBC'}]
-
-    return jsonify(result), 200
+    return jsonify(get_news(dates)), 200
 
 # if __name__ == '__main__':
 #     app.run(debug=True, host='0.0.0.0', port=3000)
