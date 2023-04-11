@@ -279,8 +279,8 @@ class SmartNoteARViewModel: ObservableObject {
         print("findPhotos called")
         print("keywords:", self.keywords)
         print("dates:", self.dates)
-//        let photosIdentifier = showPhotosForKeywords(keywords: self.keywords, time: self.dates)
-        let photosIdentifier = showPhotosForKeywords(keywords: ["people"], time: self.dates)
+        let photosIdentifier = showPhotosForKeywords(keywords: self.keywords, time: self.dates)
+//        let photosIdentifier = showPhotosForKeywords(keywords: ["people"], time: self.dates)
         print("findPhotos finished")
         print(photosIdentifier)
         return photosIdentifier
