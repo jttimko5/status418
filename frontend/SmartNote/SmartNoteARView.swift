@@ -73,6 +73,8 @@ class SmartNoteARViewModel: ObservableObject {
 
     // Constructor for handling multiple images from url
     init(identifiers: Array<String>) {
+        print("hello from ar view")
+        print("identifiers.count:", identifiers.count)
         handleAlbum(identifiers: identifiers)
     }
     
