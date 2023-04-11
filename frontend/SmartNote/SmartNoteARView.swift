@@ -17,10 +17,6 @@ import UIKit
 import AVFoundation
 
 struct SmartNoteARView: View {
-//    var IdentifierInput: Array<String>
-//    var stepsInput: HealthKitViewModel
-//    var eventsInput: String?
-
     @StateObject private var viewModel: SmartNoteARViewModel
   
     init(keywords: [String], dates: [String]) {
@@ -81,9 +77,9 @@ class SmartNoteARViewModel: ObservableObject {
         // videos
         DispatchQueue.global().async {
             let identifiers: String = self.findVideos()
-//            DispatchQueue.main.async {
-//                self.handleAlbum(identifiers: identifiers)
-//            }
+            DispatchQueue.main.async {
+                self.displayVideo(identifier: "D20156CC-2A09-4FBF-BF7D-19C516E3D5A3/L0/001")
+            }
         }
     }
     
@@ -96,15 +92,21 @@ class SmartNoteARViewModel: ObservableObject {
         let entity = ModelEntity(mesh: mesh, materials: [SimpleMaterial()])
         displayTextAsset(text: stepsString, modelEntity: entity)
         
+        let collisionShape = ShapeResource.generateBox(size: [0.2, 0.0001, 0.2])
+        let collisionComponent = CollisionComponent(shapes: [collisionShape])
+        entity.components.set([
+            collisionComponent
+        ])
+        
         // Create an anchor and add the entity to the scene
         let anchor = AnchorEntity(world: [0.42, -0.5, -0.5])
         anchor.addChild(entity)
         arView.scene.addAnchor(anchor)
         
         // Add interaction to the entity
-        let gesture = EntityGestureRecognizer(for: entity, on: arView)
-        gesture.addTarget(self, action: #selector(handleStepsGesture(_:)))
-        arView.addGestureRecognizer(gesture)
+        let stepsGesture = EntityGestureRecognizer(for: entity, on: arView)
+        stepsGesture.addTarget(self, action: #selector(handleStepsGesture(_:)))
+        arView.addGestureRecognizer(stepsGesture)
         entity.generateCollisionShapes(recursive: true)
         arView.installGestures(.all, for: entity)
     }
@@ -117,15 +119,21 @@ class SmartNoteARViewModel: ObservableObject {
             let entity = ModelEntity(mesh: mesh, materials: [SimpleMaterial()])
             displayTextAsset(text: eventsInput!, modelEntity: entity)
             
+            let collisionShape = ShapeResource.generateBox(size: [0.2, 0.0001, 0.2])
+            let collisionComponent = CollisionComponent(shapes: [collisionShape])
+            entity.components.set([
+                collisionComponent
+            ])
+            
             // Create an anchor and add the entity to the scene
             let anchor = AnchorEntity(world: [0.21, -0.5, -0.5])
             anchor.addChild(entity)
             arView.scene.addAnchor(anchor)
             
             // Add interaction to the entity
-            let gesture = EntityGestureRecognizer(for: entity, on: arView)
-            gesture.addTarget(self, action: #selector(handleEventsGesture(_:)))
-            arView.addGestureRecognizer(gesture)
+            let eventsGesture = EntityGestureRecognizer(for: entity, on: arView)
+            eventsGesture.addTarget(self, action: #selector(handleEventsGesture(_:)))
+            arView.addGestureRecognizer(eventsGesture)
             entity.generateCollisionShapes(recursive: true)
             arView.installGestures(.all, for: entity)
         
@@ -171,9 +179,9 @@ class SmartNoteARViewModel: ObservableObject {
         arView.scene.addAnchor(anchor)
         
         // Add interaction to the entity
-        let gesture = EntityGestureRecognizer(for: entity, on: arView)
-        gesture.addTarget(self, action: #selector(handleGesture(_:)))
-        arView.addGestureRecognizer(gesture)
+        let albumGesture = EntityGestureRecognizer(for: entity, on: arView)
+        albumGesture.addTarget(self, action: #selector(handleAlbumGesture(_:)))
+        arView.addGestureRecognizer(albumGesture)
         entity.generateCollisionShapes(recursive: true)
         arView.installGestures(.all, for: entity)
         
@@ -186,6 +194,61 @@ class SmartNoteARViewModel: ObservableObject {
         )
         arView.addGestureRecognizer(doubleTapGestureRecognizer)
     }
+    
+    func displayVideo(identifier: String) {
+        let options = PHVideoRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
+        
+        PHImageManager.default().requestAVAsset(forVideo: PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject!, options: options) { (avAsset, _, _) in
+            DispatchQueue.main.async {
+                guard let asset = avAsset else { return }
+                let playerItem = AVPlayerItem(asset: asset)
+                let player = AVQueuePlayer(playerItem: playerItem) // Replace AVPlayer with AVQueuePlayer
+                
+                let playerNode = VideoPlayerNode(avPlayer: player)
+                let playerEntity = playerNode.generateModelEntity(width: 0.4, height: 0.3)
+                
+                let collisionShape = ShapeResource.generateBox(size: [0.2, 0.0001, 0.2])
+                let collisionComponent = CollisionComponent(shapes: [collisionShape])
+                playerEntity.components.set([
+                    collisionComponent
+                ])
+                
+                let anchor = AnchorEntity(world: [0.63, -0.5, -0.5])
+                anchor.addChild(playerEntity)
+                self.arView.scene.addAnchor(anchor)
+                
+                let playerLooper = AVPlayerLooper(player: player, templateItem: playerItem)
+                
+                // Create and configure the play/pause button
+                let playPauseButton = UIButton(type: .system)
+                playPauseButton.setTitle("Pause", for: .normal)
+                playPauseButton.frame = CGRect(x: 20, y: 40, width: 60, height: 30)
+                playPauseButton.addTarget(self, action: #selector(self.playPauseButtonTapped(_:)), for: .touchUpInside)
+                self.arView.addSubview(playPauseButton)
+                
+                // Play the video
+                player.play()
+            }
+        }
+    }
+
+    @objc func playPauseButtonTapped(_ sender: UIButton) {
+        if let playerNode = arView.scene.findEntity(named: "VideoPlayerNode") as? VideoPlayerNode {
+            let player = playerNode.avPlayer
+            
+            if player.rate == 0 {
+                player.play()
+                sender.setTitle("Pause", for: .normal)
+            } else {
+                player.pause()
+                sender.setTitle("Play", for: .normal)
+            }
+        }
+    }
+
+
     
     func displayAlbumAsset(asset: PHAsset, modelEntity: ModelEntity) {
         let options = PHContentEditingInputRequestOptions()
@@ -259,6 +322,9 @@ class SmartNoteARViewModel: ObservableObject {
     }
 
     //TO make all three objects moving
+    @objc private func handleAlbumGesture(_ gestureRecognizer: EntityGestureRecognizer) {
+        handleEntityGesture(gestureRecognizer)
+    }
     @objc private func handleStepsGesture(_ gestureRecognizer: EntityGestureRecognizer) {
         handleEntityGesture(gestureRecognizer)
     }
@@ -280,7 +346,6 @@ class SmartNoteARViewModel: ObservableObject {
         print("keywords:", self.keywords)
         print("dates:", self.dates)
         let photosIdentifier = showPhotosForKeywords(keywords: self.keywords, time: self.dates)
-//        let photosIdentifier = showPhotosForKeywords(keywords: ["people"], time: self.dates)
         print("findPhotos finished")
         print(photosIdentifier)
         return photosIdentifier
@@ -457,25 +522,25 @@ class EntityGestureRecognizer: UIGestureRecognizer {
     
 }
 
-class VideoPlayer: NSObject {
-    private(set) var player: AVPlayer!
+
+class VideoPlayerNode: Entity {
+    let avPlayer: AVQueuePlayer // Replace AVPlayer with AVQueuePlayer
     
-    init(videoURL: URL) {
-        player = AVPlayer(url: videoURL)
+    init(avPlayer: AVQueuePlayer) { // Replace AVPlayer with AVQueuePlayer
+        self.avPlayer = avPlayer
         super.init()
     }
     
-    func play() {
-        player.play()
+    func generateModelEntity(width: Float, height: Float) -> ModelEntity {
+        let videoMaterial = VideoMaterial(avPlayer: self.avPlayer)
+        let mesh = MeshResource.generateBox(size: [0.2, 0.0001, 0.2])
+        let videoPlane = MeshResource.generatePlane(width: width, height: height)
+        let modelEntity = ModelEntity(mesh: mesh, materials: [videoMaterial])
+        return modelEntity
     }
     
-    func pause() {
-        player.pause()
-    }
-    
-    func seek(to progress: Float) {
-        let duration = CMTimeGetSeconds(player.currentItem!.duration)
-        let time = CMTimeMakeWithSeconds(Float64(progress) * duration, preferredTimescale: Int32(NSEC_PER_SEC))
-        player.seek(to: time)
+    required init() {
+        fatalError("init() has not been implemented")
     }
 }
+
