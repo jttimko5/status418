@@ -154,6 +154,7 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
+    @State private var dates: [String] = ["12/31/2022", "12/21/2022"]
     @State private var keywords: [String] = ["people"]
     @State private var isEditing = false
     @State public var parsedText: [String: [String]]
@@ -267,6 +268,10 @@ struct KeywordView: View {
         return keywords
     }
     
+    func getDates() -> Array<String>? {
+        return dates
+    }
+    
     // Use this one when completed AR View modification
 //    func findPhotos() -> Array<Array<String>> {
 //        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
@@ -276,10 +281,14 @@ struct KeywordView: View {
 }
 
 
-
 // Delete this function after activate the one above
 func findPhotos() -> [String] {
-    let temp = KeywordView(parsedText: [:])
-    let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords())
+    let temp = KeywordView()
+    let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords(), time: temp.getDates() ?? [])
     return photosIdentifier
+}
+
+func findVideos() -> [String] {
+    
+    return []
 }

@@ -2,35 +2,31 @@
 //  ImageExtraction.swift
 //  SmartNote
 //
-//  Created by Pengzhou Chen on 2023/3/18.
+//  Created by Baron Chen on 2023/3/18.
 //
 
 import SwiftUI
 import Photos
 import Vision
 
-func showPhotosForKeywords(keywords: [String]) -> [String] {
+func photoAnalyzePerformer(fetchOptions: PHFetchOptions, keywords: [String],
+                           currentMatch: Int, currentSearch: Int) -> (Int, Int, [String]) {
+    var matchedCount = currentMatch
+    var totalSearch = currentSearch
     var photoURLs: [String] = []
-    var matchedCount = 0
-    
     // Create a request for classifying the contents of an image
     let classifyRequest = VNClassifyImageRequest()
     
-    // Create a fetch options object to specify search criteria for the photos
-    let fetchOptions = PHFetchOptions()
-    fetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
-    
-    // Fetch the photos that match the specified search criteria
-    let fetchResult = PHAsset.fetchAssets(with: fetchOptions)
-    
     // Create a dispatch group to wait for all requests to complete
     let dispatchGroup = DispatchGroup()
-    
+
+    let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
     // Enumerate the fetched photos and classify their contents
     fetchResult.enumerateObjects { asset, index, pointer in
-        if matchedCount >= 5 {
+        if matchedCount >= keywords.count || totalSearch >= 500 {
             return
         }
+
         dispatchGroup.enter()
         // Request the image data and orientation of the photo
         let options = PHImageRequestOptions()
@@ -44,17 +40,18 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
                 let handler = VNImageRequestHandler(data: data, options: [:])
                 do {
                     try handler.perform([classifyRequest])
+                    totalSearch += 1
                     if let classifications = classifyRequest.results, !classifications.isEmpty {
                         // Check if the photo contains any of the specified keywords
                         let matchedKeywords = classifications.filter {
-                            keywords.contains($0.identifier.lowercased()) && $0.confidence >= 0.9
+                            keywords.contains($0.identifier.lowercased())  && $0.confidence >= 0.9
                         }
                         if !matchedKeywords.isEmpty {
                             // Add the local identifier of the matching photo to the result array
                             let localIdentifier = asset.localIdentifier
                             photoURLs.append(localIdentifier)
                             matchedCount += 1
-                            if matchedCount >= 5 {
+                            if matchedCount >= keywords.count {
                                 dispatchGroup.leave()
                                 return
                             }
@@ -67,16 +64,224 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
             dispatchGroup.leave()
         }
     }
-    
-    // Wait for all requests to complete
+
+    // Wait for all requests to complete or until the semaphore is released
     dispatchGroup.wait()
     
+    return (matchedCount, totalSearch, photoURLs)
+}
+
+
+func returnImagesForDate(fetchOptions: PHFetchOptions) -> (Int, [String]) {
+    let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+    var photoURLs: [String] = []
+    var count = 0
+    
+    if fetchResult.count > 5 {
+        // Generate 5 random indexes
+        var randomIndexes: Set<Int> = []
+        while randomIndexes.count < 5 {
+            let randomIndex = Int.random(in: 0..<fetchResult.count)
+            randomIndexes.insert(randomIndex)
+        }
+        
+        // Loop through the fetch result and retrieve the images
+        fetchResult.enumerateObjects { (asset, index, stop) in
+            if randomIndexes.contains(index) {
+                let requestOptions = PHImageRequestOptions()
+                requestOptions.isSynchronous = true
+                requestOptions.deliveryMode = .highQualityFormat
+                requestOptions.resizeMode = .exact
+                
+                photoURLs.append(asset.localIdentifier)
+                count += 1
+            }
+            if count >= 5 {
+                stop.pointee = true
+            }
+        }
+    } else {
+        // Loop through the fetch result and retrieve the images
+        fetchResult.enumerateObjects { (asset, index, stop) in
+            let requestOptions = PHImageRequestOptions()
+            requestOptions.isSynchronous = true
+            requestOptions.deliveryMode = .highQualityFormat
+            requestOptions.resizeMode = .exact
+            
+            photoURLs.append(asset.localIdentifier)
+            count += 1
+        }
+    }
+
+    return (count, photoURLs)
+}
+
+
+func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
+    var photoURLs: [String] = []
+    var matchedCount = 0
+    var totalSearch = 0
+    var totalReturn = 0
+    
+    var dates: [Date] = []
+    for date in time {
+        let comp = date.components(separatedBy: "/")
+        if let month = Int(comp[0]), let day = Int(comp[1]), let year = Int(comp[2]) {
+            dates.append(Calendar.current.date(from: DateComponents(year: year, month: month, day: day))!)
+        }
+    }
+    
+    for date in dates {
+        let start = Calendar.current.startOfDay(for: date)
+        let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate < %@", start as NSDate, end as NSDate)
+        let maxReturn = dates.count * 5
+        
+        if keywords.isEmpty {
+            let analyzeResults = returnImagesForDate(fetchOptions: fetchOptions)
+            totalReturn += analyzeResults.0
+            photoURLs += analyzeResults.1
+            if totalReturn >= maxReturn {
+                return photoURLs
+            }
+        } else {
+            let analyzeResults = photoAnalyzePerformer(fetchOptions: fetchOptions, keywords: keywords,
+                                                       currentMatch: matchedCount, currentSearch: totalSearch)
+            matchedCount = analyzeResults.0
+            totalSearch = analyzeResults.1
+            photoURLs += analyzeResults.2
+            if matchedCount >= keywords.count || totalSearch >= 500 {
+                return photoURLs
+            }
+        }
+    }
+    
+    // Create a fetch options object to specify search criteria for the photos
+    let fetchOptions = PHFetchOptions()
+    
+    if !dates.isEmpty {
+        if keywords.isEmpty {
+            return photoURLs
+        }
+        
+        var oldestDate = Date()
+        var newestDate = Date()
+        let calendar = Calendar.current
+        if dates.count > 1 {
+            oldestDate = dates.min()!
+            newestDate = dates.max()!
+            
+            let datePoint = calendar.startOfDay(for: Date())
+            let dateRange = calendar.date(byAdding: .day, value: -5, to: datePoint)!
+            if newestDate >= dateRange {
+                newestDate = Date()
+            } else {
+                newestDate = calendar.startOfDay(for: newestDate)
+                newestDate = calendar.date(byAdding: .day, value: 5, to: newestDate)!
+            }
+            
+            oldestDate = calendar.startOfDay(for: oldestDate)
+            oldestDate = calendar.date(byAdding: .day, value: -5, to: oldestDate)!
+        } else {
+            oldestDate = calendar.startOfDay(for: dates[0])
+            oldestDate = calendar.date(byAdding: .day, value: -5, to: oldestDate)!
+        }
+
+        var predicates: [NSPredicate] = []
+        for date in dates {
+            let exclusionStartDate = calendar.startOfDay(for: date)
+            let exclusionEndDate = calendar.date(byAdding: .day, value: 1, to: exclusionStartDate)!
+            let predicate = NSPredicate(format: "creationDate < %@ OR creationDate >= %@",
+                                        exclusionStartDate as NSDate, exclusionEndDate as NSDate)
+            predicates.append(predicate)
+        }
+        predicates.append(NSPredicate(format: "creationDate >= %@ AND creationDate <= %@",
+                                      oldestDate as NSDate, newestDate as NSDate))
+        fetchOptions.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+        
+    } else {
+        fetchOptions.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        fetchOptions.fetchLimit = 500
+    }
+    
+    let analyzeResults = photoAnalyzePerformer(fetchOptions: fetchOptions, keywords: keywords,
+                                               currentMatch: matchedCount, currentSearch: totalSearch)
+
+    photoURLs += analyzeResults.2
+
+    // If no matches were found, print a message indicating that there are no related photos
+    if photoURLs.isEmpty {
+        print("No photo related to the specified keywords.")
+    }
+
     return photoURLs
 }
 
 
+//import AVFoundation
+//import Vision
+//
+//func getVideoIdentifier(withKeywords keywords: [String], completion: @escaping (Int?) -> Void) {
+//    guard let asset = AVAsset(url: videoURL) else {
+//        completion(nil)
+//        return
+//    }
+//
+//    let imageGenerator = AVAssetImageGenerator(asset: asset)
+//    imageGenerator.appliesPreferredTrackTransform = true
+//
+//    var matchingKeywords = Set<String>(keywords)
+//    var foundIdentifier: Int?
+//
+//    let duration = CMTimeGetSeconds(asset.duration)
+//    let time = CMTimeMakeWithSeconds(duration / 2, preferredTimescale: 600)
+//
+//    let semaphore = DispatchSemaphore(value: 0)
+//
+//    imageGenerator.generateCGImagesAsynchronously(forTimes: [NSValue(time: time)]) { _, cgImage, _, _, _ in
+//        if let cgImage = cgImage {
+//            let ciImage = CIImage(cgImage: cgImage)
+//            let request = VNRecognizeTextRequest { request, error in
+//                if let results = request.results as? [VNRecognizedTextObservation] {
+//                    for result in results {
+//                        if let text = result.topCandidates(1).first?.string {
+//                            if matchingKeywords.contains(text) {
+//                                foundIdentifier = result.identifier
+//                                matchingKeywords.remove(text)
+//                                if matchingKeywords.isEmpty {
+//                                    break
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//                semaphore.signal()
+//            }
+//
+//            let handler = VNImageRequestHandler(ciImage: ciImage)
+//            do {
+//                try handler.perform([request])
+//            } catch {
+//                print("Error: \(error.localizedDescription)")
+//                semaphore.signal()
+//            }
+//        } else {
+//            semaphore.signal()
+//        }
+//    }
+//
+//    // Wait for the image generation and text recognition to complete
+//    semaphore.wait()
+//
+//    completion(foundIdentifier)
+//}
+
+
+
 // Video part still under working
-//func showVideosForKeywords(keywords: [String]) -> [String] {
+//func showVideosForKeywords(keywords: [String], time: [String]) -> [String] {
 //    var videoURLs: [String] = []
 //    var matchedCount = 0
 //
@@ -92,7 +297,7 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
 //
 //    // Enumerate the fetched videos and check their metadata for keywords
 //    fetchResult.enumerateObjects { asset, index, pointer in
-//        if matchedCount >= 2 {
+//        if matchedCount >= 1 {
 //            return
 //        }
 //        dispatchGroup.enter()
@@ -110,7 +315,7 @@ func showPhotosForKeywords(keywords: [String]) -> [String] {
 //                    let localIdentifier = asset.localIdentifier
 //                    videoURLs.append(localIdentifier)
 //                    matchedCount += 1
-//                    if matchedCount >= 2 {
+//                    if matchedCount >= 1 {
 //                        dispatchGroup.leave()
 //                        return
 //                    }
