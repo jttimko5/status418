@@ -237,7 +237,14 @@ struct KeywordView: View {
                 Text("Tap here to go to the destination view:")
             }
             
-            NavigationLink(destination: LazyView(SmartNoteARView(IdentifierInput: findPhotos())), isActive: Binding(
+            NavigationLink(
+                destination: LazyView(
+                    SmartNoteARView(
+                        keywords: keywords,
+                        dates: dates
+                    )
+                ),
+                isActive: Binding(
                 get: { shouldShowDestination },
                 set: { newValue in
                     if !newValue {
@@ -248,11 +255,6 @@ struct KeywordView: View {
                 EmptyView()
             }
             .hidden()
-            
-//            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos())) {
-//                Text("Search Related Photos")
-//                Image(systemName: "chevron.right")
-//            }
         }
         .navigationTitle("Keywords and Date")
     }
@@ -294,17 +296,6 @@ struct KeywordView: View {
 //        return [photosIdentifier, videosIdentifier]
 //    }
     
-    // Delete this function after activate the one above
-    func findPhotos() -> [String] {
-        print("findPhotos num keywords", getKeywords().count)
-        let photosIdentifier = showPhotosForKeywords(keywords: getKeywords(), time: getDates() ?? [])
-        print("findPhotos finished")
-        return photosIdentifier
-    }
-
-    func findVideos() -> [String] {
-        return []
-    }
 
 }
 

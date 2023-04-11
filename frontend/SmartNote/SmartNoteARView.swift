@@ -13,15 +13,21 @@ import ARKit
 import AVKit
 import SpriteKit
 import Vision
+import UIKit
 
 struct SmartNoteARView: View {
-    var IdentifierInput: Array<String>
+//    var IdentifierInput: Array<String>
+//    var stepsInput: HealthKitViewModel
+//    var eventsInput: String?
 
     @StateObject private var viewModel: SmartNoteARViewModel
   
-    init(IdentifierInput: Array<String>) {
-        self.IdentifierInput = IdentifierInput
-        self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput))
+    init(keywords: [String], dates: [String]) {
+        self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(
+            keywords: keywords,
+            dates: dates
+        )
+        )
     }
     @Environment(\.presentationMode) var presentationMode
     
@@ -36,92 +42,64 @@ struct SmartNoteARView: View {
 
 class SmartNoteARViewModel: ObservableObject {
     let arView = ARView(frame: .zero)
-    
-//    // Default constructor to test single image from Assets folder
-//    init() {
-//        // Create a box mesh
-//        let mesh = MeshResource.generateBox(size: [0.2, 0.0001, 0.2])
-//
-//        // Create a material
-//        let imageName = "amongus"
-//        var material = SimpleMaterial()
-//        material.color.texture = .init(try! .load(named: imageName))
-//
-//        // Create a model entity with the mesh and material
-//        let entity = ModelEntity(mesh: mesh, materials: [material])
-//
-//        // Add collision component
-//        let collisionShape = ShapeResource.generateBox(size: [0.2, 0.0001, 0.2])
-//        let collisionComponent = CollisionComponent(shapes: [collisionShape])
-//        entity.components.set([
-//            collisionComponent
-//        ])
-//
-//        // Create an anchor and add the entity to the scene
-//        let anchor = AnchorEntity(world: [0, -0.5, -0.5])
-//        anchor.addChild(entity)
-//        arView.scene.addAnchor(anchor)
-//
-//        // Add swipe gesture recognizer
-//        let swipeGestureRecognizer = MaterialSwipeGestureRecognizer(
-//            target: self,
-//            action: #selector(handleSwipe(_:)),
-//            entity: entity
-//        )
-//        arView.addGestureRecognizer(swipeGestureRecognizer)
-//    }
+    let keywords: [String]
+    let dates: [String]
 
     // Constructor for handling multiple images from url
-    init(identifiers: Array<String>) {
+    init(
+        keywords: [String],
+        dates: [String]
+    ) {
         print("hello from ar view")
-        print("identifiers.count:", identifiers.count)
-        handleAlbum(identifiers: identifiers)
+        print("keywords", keywords)
+        print("dates", dates)
+        self.keywords = keywords
+        self.dates = dates
+
+        // album
+        DispatchQueue.global().async {
+            let identifiers = self.findPhotos()
+            DispatchQueue.main.async {
+                self.handleAlbum(identifiers: identifiers)
+            }
+        }
+        // steps
+        DispatchQueue.global().async {
+            let stepsInput = self.findSteps()
+            DispatchQueue.main.async {
+                self.handleSteps(stepsInput: stepsInput)
+            }
+        }
+        // events
+        DispatchQueue.global().async {
+            let eventsInput = self.findEvents()
+            DispatchQueue.main.async {
+                self.handleEvents(eventsInput: eventsInput)
+            }
+        }
     }
     
-//    // Constructor for handling multiple images from url
-//    init(identifiers: Array<String>) {
-//        for (i, identifier) in identifiers.enumerated() {
-//
-//            //Access photos by local identifiers
-//            let assetResults = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
-//
-//            //Check whether you can find the image
-//            guard let asset = assetResults.firstObject else {
-//                print("Could not find asset with local identifier: \(identifier)")
-//                return
-//            }
-//            let options = PHContentEditingInputRequestOptions()
-//            asset.requestContentEditingInput(with: options) { input, _ in
-//                guard let imageURL = input?.fullSizeImageURL else {
-//                    print("Could not retrieve image URL for asset: \(asset)")
-//                    return
-//                }
-//                // Create a box mesh
-//                let len = 0.2
-//                let height = 0.2
-//                let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
-//
-//                // Create a material
-//                var material = SimpleMaterial()
-//                let texture = try! TextureResource.load(contentsOf: imageURL)
-//                material.color.texture = PhysicallyBasedMaterial.Texture(texture)
-//
-//                // Create a model entity with the mesh and material
-//                let entity = ModelEntity(mesh: mesh, materials: [material])
-//
-//                // Create an anchor and add the entity to the scene
-//                let numRows = 3
-//                let row = i % numRows
-//                let col = Int(i / numRows)
-//                let x = 0 + ((len + 0.01) * Double(col))
-//                let y = -0.5
-//                let z = -0.5 + ((height + 0.01) * Double(row))
-//                let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
-//                anchor.addChild(entity)
-//                self.arView.scene.addAnchor(anchor)
-//            }
-//        }
-//    }
+
+    
+    func handleSteps(stepsInput: HealthKitViewModel) {
+        
+    }
+    
+    func handleEvents(eventsInput: String?) {
+        print("handleEvents called. Events:", eventsInput!)
+        if eventsInput != nil {
+            // create entity
+            let mesh = MeshResource.generateBox(size: [0.2, 0.0001, 0.2])
+            let entity = ModelEntity(mesh: mesh, materials: [SimpleMaterial()])
+            displayTextAsset(text: eventsInput!, modelEntity: entity)
+            
+            // Create an anchor and add the entity to the scene
+            let anchor = AnchorEntity(world: [0.21, -0.5, -0.5])
+            anchor.addChild(entity)
+            arView.scene.addAnchor(anchor)
+        }
+
+    }
     
     func handleAlbum(identifiers: Array<String>) {
         if (identifiers.count == 0) {
@@ -194,6 +172,26 @@ class SmartNoteARViewModel: ObservableObject {
         }
     }
     
+    func displayTextAsset(text: String, modelEntity: ModelEntity) {
+        // convert text to something that can be loaded into texture resource
+        if let texture = createTextTexture(
+            text: text,
+            font: UIFont.systemFont(ofSize: 24),
+            size: CGSize(width: 128, height: 128)) {
+            if var modelComponent = modelEntity.components[ModelComponent.self] as? ModelComponent {
+                for (index, material) in modelComponent.materials.enumerated() {
+                    if var simpleMaterial = material as? SimpleMaterial {
+                        // Update the texture of the existing material
+                        simpleMaterial.color.texture = PhysicallyBasedMaterial.Texture(texture)
+                        modelComponent.materials[index] = simpleMaterial
+                    }
+                }
+                // Apply the updated materials to the model entity
+                modelEntity.components[ModelComponent.self] = modelComponent
+            }
+        }
+    }
+    
     @objc func handleSwipe(_ recognizer: MaterialSwipeGestureRecognizer) {
         guard let modelEntity = recognizer.entity else { return }
 
@@ -211,6 +209,53 @@ class SmartNoteARViewModel: ObservableObject {
         recognizer.imageIdx += 1
         
         displayAlbumAsset(asset: asset, modelEntity: modelEntity)
+    }
+    
+    // Delete this function after activate the one above
+    func findPhotos() -> [String] {
+        print("findPhotos num keywords", self.keywords.count)
+        let photosIdentifier = showPhotosForKeywords(keywords: self.keywords, time: self.dates)
+        print("findPhotos finished")
+        return photosIdentifier
+    }
+    
+    func findVideos() -> [String] {
+        return []
+    }
+
+    func findEvents() -> String? {
+        print("findEvents called")
+        let dates = getConvertedDates()
+        let events = pullEvents(dates: dates)
+        print("findEvents finished")
+        return events
+    }
+
+    func findSteps() -> HealthKitViewModel {
+        print("findSteps called")
+        let dates = getConvertedDates()
+        let hkmodel = HealthKitViewModel()
+        if (dates[0] != nil) {
+            hkmodel.healthRequest(date: dates[0] ?? Date())
+        }
+        print("findSteps finished")
+        return hkmodel
+    }
+    
+    func getConvertedDates() -> [Date?] {
+        let dates = self.dates
+        
+        var list: [Date?] = []
+        
+        for date in dates ?? [] {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "MM/dd/yyy"
+            dateFormatter.timeZone = TimeZone.current
+            dateFormatter.locale = Locale.current
+            let date_object: Date? = dateFormatter.date(from: date)
+            list.append(date_object)
+        }
+        return list
     }
 }
 
@@ -238,6 +283,25 @@ class MaterialSwipeGestureRecognizer: UISwipeGestureRecognizer {
     }
 }
 
+func createTextTexture(text: String, font: UIFont, size: CGSize) -> TextureResource? {
+    let renderer = UIGraphicsImageRenderer(size: size)
+    let image = renderer.image { context in
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: UIColor.white,
+            .paragraphStyle: paragraphStyle
+        ]
+        let attributedText = NSAttributedString(string: text, attributes: attributes)
+        attributedText.draw(in: CGRect(origin: .zero, size: size))
+    }
+    let options = TextureResource.CreateOptions(semantic: TextureResource.Semantic.raw)
+    let texture = try? TextureResource.generate(
+        from: image.cgImage!,
+        options: options)
+    return texture
+}
 
 
 //TODO: Videos show in AR!
@@ -293,3 +357,26 @@ class MaterialSwipeGestureRecognizer: UISwipeGestureRecognizer {
 //    }
 //}
 
+//                // Create a box mesh
+//                let len = 0.2
+//                let height = 0.2
+//                let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
+//
+//                // Create a material
+//                var material = SimpleMaterial()
+//                let texture = try! TextureResource.load(contentsOf: imageURL)
+//                material.color.texture = PhysicallyBasedMaterial.Texture(texture)
+//
+//                // Create a model entity with the mesh and material
+//                let entity = ModelEntity(mesh: mesh, materials: [material])
+//
+//                // Create an anchor and add the entity to the scene
+//                let numRows = 3
+//                let row = i % numRows
+//                let col = Int(i / numRows)
+//                let x = 0 + ((len + 0.01) * Double(col))
+//                let y = -0.5
+//                let z = -0.5 + ((height + 0.01) * Double(row))
+//                let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
+//                anchor.addChild(entity)
+//                self.arView.scene.addAnchor(anchor)
