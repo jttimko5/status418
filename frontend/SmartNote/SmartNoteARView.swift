@@ -14,6 +14,7 @@ import AVKit
 import SpriteKit
 import Vision
 import UIKit
+import AVFoundation
 
 struct SmartNoteARView: View {
 //    var IdentifierInput: Array<String>
@@ -77,6 +78,13 @@ class SmartNoteARViewModel: ObservableObject {
                 self.handleEvents(eventsInput: eventsInput)
             }
         }
+        // videos
+        DispatchQueue.global().async {
+            let identifiers: String = self.findVideos()
+//            DispatchQueue.main.async {
+//                self.handleAlbum(identifiers: identifiers)
+//            }
+        }
     }
     
     func handleSteps(stepsInput: HealthKitViewModel) {
@@ -92,8 +100,13 @@ class SmartNoteARViewModel: ObservableObject {
         let anchor = AnchorEntity(world: [0.42, -0.5, -0.5])
         anchor.addChild(entity)
         arView.scene.addAnchor(anchor)
-    
         
+        // Add interaction to the entity
+        let gesture = EntityGestureRecognizer(for: entity, on: arView)
+        gesture.addTarget(self, action: #selector(handleStepsGesture(_:)))
+        arView.addGestureRecognizer(gesture)
+        entity.generateCollisionShapes(recursive: true)
+        arView.installGestures(.all, for: entity)
     }
     
     func handleEvents(eventsInput: String?) {
@@ -108,6 +121,14 @@ class SmartNoteARViewModel: ObservableObject {
             let anchor = AnchorEntity(world: [0.21, -0.5, -0.5])
             anchor.addChild(entity)
             arView.scene.addAnchor(anchor)
+            
+            // Add interaction to the entity
+            let gesture = EntityGestureRecognizer(for: entity, on: arView)
+            gesture.addTarget(self, action: #selector(handleEventsGesture(_:)))
+            arView.addGestureRecognizer(gesture)
+            entity.generateCollisionShapes(recursive: true)
+            arView.installGestures(.all, for: entity)
+        
         }
     }
     
@@ -149,14 +170,21 @@ class SmartNoteARViewModel: ObservableObject {
         anchor.addChild(entity)
         arView.scene.addAnchor(anchor)
         
-        // Add swipe gesture recognizer
-        let swipeGestureRecognizer = MaterialSwipeGestureRecognizer(
+        // Add interaction to the entity
+        let gesture = EntityGestureRecognizer(for: entity, on: arView)
+        gesture.addTarget(self, action: #selector(handleGesture(_:)))
+        arView.addGestureRecognizer(gesture)
+        entity.generateCollisionShapes(recursive: true)
+        arView.installGestures(.all, for: entity)
+        
+        // Add double tap gesture recognizer
+        let doubleTapGestureRecognizer = EntityDoubleTapGestureRecognizer(
             target: self,
-            action: #selector(handleSwipe(_:)),
+            action: #selector(handleDoubleTap(_:)),
             entity: entity,
             albumAssets: assets
         )
-        arView.addGestureRecognizer(swipeGestureRecognizer)
+        arView.addGestureRecognizer(doubleTapGestureRecognizer)
     }
     
     func displayAlbumAsset(asset: PHAsset, modelEntity: ModelEntity) {
@@ -202,7 +230,7 @@ class SmartNoteARViewModel: ObservableObject {
         }
     }
     
-    @objc func handleSwipe(_ recognizer: MaterialSwipeGestureRecognizer) {
+    @objc func handleDoubleTap(_ recognizer: EntityDoubleTapGestureRecognizer) {
         guard let modelEntity = recognizer.entity else { return }
 
         // hit test
@@ -221,18 +249,51 @@ class SmartNoteARViewModel: ObservableObject {
         displayAlbumAsset(asset: asset, modelEntity: modelEntity)
     }
     
+    // Handle the move function
+    @objc private func handleGesture(_ gestureRecognizer: EntityGestureRecognizer) {
+        guard let entity = gestureRecognizer.entity else { return }
+        let translation = gestureRecognizer.translation
+        let position = entity.position
+        entity.position = SIMD3<Float>(x: position.x + Float(translation.x / 100), y: position.y + Float(-translation.y / 100), z: position.z)
+        gestureRecognizer.translation = .zero
+    }
+
+    //TO make all three objects moving
+    @objc private func handleStepsGesture(_ gestureRecognizer: EntityGestureRecognizer) {
+        handleEntityGesture(gestureRecognizer)
+    }
+
+    @objc private func handleEventsGesture(_ gestureRecognizer: EntityGestureRecognizer) {
+        handleEntityGesture(gestureRecognizer)
+    }
+    private func handleEntityGesture(_ gestureRecognizer: EntityGestureRecognizer) {
+        guard let entity = gestureRecognizer.entity else { return }
+        let translation = gestureRecognizer.translation
+        let position = entity.position
+        entity.position = SIMD3<Float>(x: position.x + Float(translation.x / 100), y: position.y + Float(-translation.y / 100), z: position.z)
+        gestureRecognizer.translation = .zero
+    }
+    
     // Delete this function after activate the one above
     func findPhotos() -> [String] {
         print("findPhotos called")
         print("keywords:", self.keywords)
         print("dates:", self.dates)
-        let photosIdentifier = showPhotosForKeywords(keywords: self.keywords, time: self.dates)
+//        let photosIdentifier = showPhotosForKeywords(keywords: self.keywords, time: self.dates)
+        let photosIdentifier = showPhotosForKeywords(keywords: ["people"], time: self.dates)
         print("findPhotos finished")
+        print(photosIdentifier)
         return photosIdentifier
     }
     
-    func findVideos() -> [String] {
-        return []
+    func findVideos() -> String {
+        print("findPhotos called")
+        print("keywords:", self.keywords)
+        print("dates:", self.dates)
+        let videoIdentifier = fetchVideoIdentifier(withKeywords: ["4", "3", "0", "objects", "Bronx", "Haiyang Park", "People"])
+        print("findVideos finished")
+        print(videoIdentifier)
+        return videoIdentifier
     }
 
     func findEvents() -> String? {
@@ -289,7 +350,19 @@ struct ARViewContainer: UIViewRepresentable {
 }
 
 
-class MaterialSwipeGestureRecognizer: UISwipeGestureRecognizer {
+//class MaterialSwipeGestureRecognizer: UISwipeGestureRecognizer {
+//    var entity: ModelEntity?
+//    var albumAssets: [PHAsset] = []
+//    var imageIdx = 1
+//
+//    convenience init(target: Any?, action: Selector?, entity: ModelEntity, albumAssets: [PHAsset]) {
+//        self.init(target: target, action: action)
+//        self.entity = entity
+//        self.albumAssets = albumAssets
+//    }
+//}
+
+class EntityDoubleTapGestureRecognizer: UITapGestureRecognizer {
     var entity: ModelEntity?
     var albumAssets: [PHAsset] = []
     var imageIdx = 1
@@ -298,8 +371,10 @@ class MaterialSwipeGestureRecognizer: UISwipeGestureRecognizer {
         self.init(target: target, action: action)
         self.entity = entity
         self.albumAssets = albumAssets
+        self.numberOfTapsRequired = 2
     }
 }
+
 
 func createTextTexture(text: String, font: UIFont, size: CGSize) -> TextureResource? {
     let renderer = UIGraphicsImageRenderer(size: size)
@@ -321,80 +396,86 @@ func createTextTexture(text: String, font: UIFont, size: CGSize) -> TextureResou
     return texture
 }
 
+// Gesture (move the AR objects)
+class EntityGestureRecognizer: UIGestureRecognizer {
+    weak var entity: Entity?
+    weak var arView: ARView?
+    var translation: CGPoint = .zero
+    var isTouchOnEntity: Bool = false
+    
+    init(for entity: Entity, on arView: ARView) {
+        self.entity = entity
+        self.arView = arView
+        super.init(target: nil, action: nil)
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        if touches.count > 1 {
+            state = .cancelled
+            return
+        }
+        state = .began
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+        guard let touch = touches.first, let view = arView else { return }
+        if state == .began || state == .changed {
+            let location = touch.location(in: view)
+            let hitTestResults = view.hitTest(location, types: .existingPlaneUsingGeometry)
+            isTouchOnEntity = false
+            for result in hitTestResults {
+                if let anchor = result.anchor {
+                    let hitEntities = view.entities(at: location)
+                    for hitEntity in hitEntities {
+                        if hitEntity == self.entity {
+                            isTouchOnEntity = true
+                        }
+                    }
+                }
+            }
 
-//TODO: Videos show in AR!
-//class VideoARView: ObservableObject {
-//
-//    @IBOutlet weak var arView: ARSCNView!
-//
-//    let player = AVPlayer()
-//    var videoNode = SKVideoNode()
-//
-//    init() {
-//    }
-//
-//    init(identifier: String) {
-//
-//        // Replace with the local identifier of the video you want to load
-//        let localIdentifier = identifier
-//
-//        let options = PHVideoRequestOptions()
-//        options.isNetworkAccessAllowed = true
-//
-//        PHImageManager.default().requestAVAsset(forVideo: PHAsset.fetchAssets(withLocalIdentifiers: [localIdentifier], options: nil).firstObject!, options: options) { asset, _, _ in
-//            guard let asset = asset else {
-//                return
-//            }
-//
-//            DispatchQueue.main.async {
-//                self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
-//                self.videoNode = SKVideoNode(avPlayer: self.player)
-//            }
-//        }
-//
-//        let skScene = SKScene(size: CGSize(width: 1280, height: 720))
-//        skScene.addChild(videoNode)
-//
-//        let plane = SCNPlane(width: 1.0, height: 0.5)
-//        plane.firstMaterial?.isDoubleSided = true
-//        plane.firstMaterial?.diffuse.contents = skScene
-//
-//        let planeNode = SCNNode(geometry: plane)
-//        planeNode.eulerAngles.x = -.pi / 2
-//
-//        let configuration = ARWorldTrackingConfiguration()
-//        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-//
-//        arView.scene.rootNode.addChildNode(planeNode)
-//    }
-//
-//    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-//        if let videoAnchor = anchor as? ARImageAnchor, videoAnchor == arView.session.currentFrame?.anchors.first {
-//            player.play()
-//        }
-//    }
-//}
+            if isTouchOnEntity {
+                let prevLocation = touch.previousLocation(in: view)
+                let dx = location.x - prevLocation.x
+                let dy = location.y - prevLocation.y
+                translation = CGPoint(x: dx, y: dy)
+                state = .changed
+            } else {
+                state = .cancelled
+            }
+        }
+    }
 
-//                // Create a box mesh
-//                let len = 0.2
-//                let height = 0.2
-//                let mesh = MeshResource.generateBox(size: [Float(len), 0.0001, Float(height)])
-//
-//                // Create a material
-//                var material = SimpleMaterial()
-//                let texture = try! TextureResource.load(contentsOf: imageURL)
-//                material.color.texture = PhysicallyBasedMaterial.Texture(texture)
-//
-//                // Create a model entity with the mesh and material
-//                let entity = ModelEntity(mesh: mesh, materials: [material])
-//
-//                // Create an anchor and add the entity to the scene
-//                let numRows = 3
-//                let row = i % numRows
-//                let col = Int(i / numRows)
-//                let x = 0 + ((len + 0.01) * Double(col))
-//                let y = -0.5
-//                let z = -0.5 + ((height + 0.01) * Double(row))
-//                let anchor = AnchorEntity(world: [Float(x), Float(y), Float(z)])
-//                anchor.addChild(entity)
-//                self.arView.scene.addAnchor(anchor)
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        state = .ended
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+        state = .cancelled
+    }
+    
+}
+
+class VideoPlayer: NSObject {
+    private(set) var player: AVPlayer!
+    
+    init(videoURL: URL) {
+        player = AVPlayer(url: videoURL)
+        super.init()
+    }
+    
+    func play() {
+        player.play()
+    }
+    
+    func pause() {
+        player.pause()
+    }
+    
+    func seek(to progress: Float) {
+        let duration = CMTimeGetSeconds(player.currentItem!.duration)
+        let time = CMTimeMakeWithSeconds(Float64(progress) * duration, preferredTimescale: Int32(NSEC_PER_SEC))
+        player.seek(to: time)
+    }
+}
