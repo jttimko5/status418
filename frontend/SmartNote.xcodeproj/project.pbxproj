@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1DC3522429C37C120015235F /* SmartNoteARView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC3522329C37C120015235F /* SmartNoteARView.swift */; };
 		211941DC29E4B95D00A1DE38 /* HealthAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 211941D929E4B95C00A1DE38 /* HealthAccess.swift */; };
 		211941DD29E4B95D00A1DE38 /* EventAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 211941DB29E4B95C00A1DE38 /* EventAccess.swift */; };
 		21DF8E0629C0C8200017A5ED /* SmartNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DF8E0529C0C8200017A5ED /* SmartNoteApp.swift */; };
@@ -15,12 +14,12 @@
 		21DF8E0A29C0C8210017A5ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 21DF8E0929C0C8210017A5ED /* Assets.xcassets */; };
 		21DF8E0D29C0C8210017A5ED /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 21DF8E0C29C0C8210017A5ED /* Preview Assets.xcassets */; };
 		21DF8E1429C0CCCB0017A5ED /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DF8E1329C0CCCB0017A5ED /* ImageView.swift */; };
+		4213ADDF29C7226B003393B3 /* SmartNoteARView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4213ADDE29C7226B003393B3 /* SmartNoteARView.swift */; };
 		6AC96120BA9B40CF83594B48 /* Pods_SmartNote.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 265EAC97AB6F48788F889246 /* Pods_SmartNote.framework */; };
 		FDC81B8E29C69E6100AC5E54 /* ImageExtraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC81B8D29C69E6100AC5E54 /* ImageExtraction.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1DC3522329C37C120015235F /* SmartNoteARView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartNoteARView.swift; sourceTree = "<group>"; };
 		211941D929E4B95C00A1DE38 /* HealthAccess.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HealthAccess.swift; sourceTree = "<group>"; };
 		211941DA29E4B95C00A1DE38 /* HealthKit.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = HealthKit.entitlements; sourceTree = "<group>"; };
 		211941DB29E4B95C00A1DE38 /* EventAccess.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventAccess.swift; sourceTree = "<group>"; };
@@ -78,13 +77,12 @@
 				211941D929E4B95C00A1DE38 /* HealthAccess.swift */,
 				211941DA29E4B95C00A1DE38 /* HealthKit.entitlements */,
 				21DF8E0529C0C8200017A5ED /* SmartNoteApp.swift */,
-				1DC3522329C37C120015235F /* SmartNoteARView.swift */,
 				21DF8E0729C0C8200017A5ED /* ContentView.swift */,
 				4213ADDE29C7226B003393B3 /* SmartNoteARView.swift */,
 				21DF8E0929C0C8210017A5ED /* Assets.xcassets */,
+				21DF8E0B29C0C8210017A5ED /* Preview Content */,
 				21DF8E1329C0CCCB0017A5ED /* ImageView.swift */,
 				FDC81B8D29C69E6100AC5E54 /* ImageExtraction.swift */,
-				21DF8E0B29C0C8210017A5ED /* Preview Content */,
 			);
 			path = SmartNote;
 			sourceTree = "<group>";
@@ -234,7 +232,7 @@
 				21DF8E0829C0C8200017A5ED /* ContentView.swift in Sources */,
 				211941DC29E4B95D00A1DE38 /* HealthAccess.swift in Sources */,
 				21DF8E0629C0C8200017A5ED /* SmartNoteApp.swift in Sources */,
-				1DC3522429C37C120015235F /* SmartNoteARView.swift in Sources */,
+				4213ADDF29C7226B003393B3 /* SmartNoteARView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -361,7 +359,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_ENTITLEMENTS = SmartNote/SmartNote.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SmartNote/Preview Content\"";
@@ -387,7 +385,6 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = edu.umich.kasweet.SmartNoteApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -400,7 +397,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_ENTITLEMENTS = SmartNote/SmartNote.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SmartNote/Preview Content\"";
@@ -426,7 +423,6 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = edu.umich.kasweet.SmartNoteApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

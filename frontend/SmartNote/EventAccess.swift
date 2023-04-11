@@ -19,7 +19,7 @@ func getDate(date_str: String) -> Date? {
     return dateFormatter.date(from: date_str) // replace Date String
 }
 
-func pullEvents(dates: Array<String>?) -> [String]? {
+func pullEvents(dates: [Date?]) -> String? {
     // start code: https://developer.apple.com/documentation/eventkit/retrieving_events_and_reminders
     // Create list of items for return
     var list: [String] = []
@@ -32,8 +32,8 @@ func pullEvents(dates: Array<String>?) -> [String]? {
         }
     }
     let calendar = Calendar.current
-    for d in dates ?? [] {
-        let date = getDate(date_str: d) ?? nil
+    for date in dates{
+//        let date = getDate(date_str: d) ?? nil
         // Create a yesterday date
         var back_win = DateComponents()
         back_win.day = -1
@@ -59,6 +59,7 @@ func pullEvents(dates: Array<String>?) -> [String]? {
 //            list.append(e)
         }
     }
-    return list
+    let stringRepresentation = list.joined(separator:"\n")
+    return stringRepresentation
 }
 
