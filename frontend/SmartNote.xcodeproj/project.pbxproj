@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		211941DC29E4B95D00A1DE38 /* HealthAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 211941D929E4B95C00A1DE38 /* HealthAccess.swift */; };
+		211941DD29E4B95D00A1DE38 /* EventAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 211941DB29E4B95C00A1DE38 /* EventAccess.swift */; };
 		21DF8E0629C0C8200017A5ED /* SmartNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DF8E0529C0C8200017A5ED /* SmartNoteApp.swift */; };
 		21DF8E0829C0C8200017A5ED /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DF8E0729C0C8200017A5ED /* ContentView.swift */; };
 		21DF8E0A29C0C8210017A5ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 21DF8E0929C0C8210017A5ED /* Assets.xcassets */; };
@@ -19,6 +21,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		211941D929E4B95C00A1DE38 /* HealthAccess.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HealthAccess.swift; sourceTree = "<group>"; };
+		211941DA29E4B95C00A1DE38 /* HealthKit.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = HealthKit.entitlements; sourceTree = "<group>"; };
+		211941DB29E4B95C00A1DE38 /* EventAccess.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventAccess.swift; sourceTree = "<group>"; };
+		211941DE29E4BC0200A1DE38 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		211941DF29E4CC7700A1DE38 /* SmartNote.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SmartNote.entitlements; sourceTree = "<group>"; };
 		21DF8E0229C0C8200017A5ED /* SmartNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		21DF8E0529C0C8200017A5ED /* SmartNoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartNoteApp.swift; sourceTree = "<group>"; };
 		21DF8E0729C0C8200017A5ED /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -66,6 +73,11 @@
 		21DF8E0429C0C8200017A5ED /* SmartNote */ = {
 			isa = PBXGroup;
 			children = (
+				211941DF29E4CC7700A1DE38 /* SmartNote.entitlements */,
+				211941DE29E4BC0200A1DE38 /* Info.plist */,
+				211941DB29E4B95C00A1DE38 /* EventAccess.swift */,
+				211941D929E4B95C00A1DE38 /* HealthAccess.swift */,
+				211941DA29E4B95C00A1DE38 /* HealthKit.entitlements */,
 				21DF8E0529C0C8200017A5ED /* SmartNoteApp.swift */,
 				21DF8E0729C0C8200017A5ED /* ContentView.swift */,
 				4213ADDE29C7226B003393B3 /* SmartNoteARView.swift */,
@@ -222,9 +234,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				211941DD29E4B95D00A1DE38 /* EventAccess.swift in Sources */,
 				FDC81B8E29C69E6100AC5E54 /* ImageExtraction.swift in Sources */,
 				21DF8E1429C0CCCB0017A5ED /* ImageView.swift in Sources */,
 				21DF8E0829C0C8200017A5ED /* ContentView.swift in Sources */,
+				211941DC29E4B95D00A1DE38 /* HealthAccess.swift in Sources */,
 				21DF8E0629C0C8200017A5ED /* SmartNoteApp.swift in Sources */,
 				4213ADDF29C7226B003393B3 /* SmartNoteARView.swift in Sources */,
 			);
@@ -353,13 +367,19 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SmartNote/SmartNote.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SmartNote/Preview Content\"";
-				DEVELOPMENT_TEAM = VMBUKJDY2G;
+				DEVELOPMENT_TEAM = FB7ZVVYP9V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SmartNote/Info.plist;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Allow to retrieve relevant calendar events";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Allow to scan pages with camera";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Allow to retrieve steps data";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Allow to retrieve steps data";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Allow to retrieve steps data";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow to scan pages in library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -371,7 +391,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = edu.umich.baroncpz.SmartNoteApp;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.umich.kasweet.SmartNoteApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -385,13 +405,19 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SmartNote/SmartNote.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SmartNote/Preview Content\"";
-				DEVELOPMENT_TEAM = VMBUKJDY2G;
+				DEVELOPMENT_TEAM = FB7ZVVYP9V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SmartNote/Info.plist;
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Allow to retrieve relevant calendar events";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Allow to scan pages with camera";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Allow to retrieve steps data";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Allow to retrieve steps data";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Allow to retrieve steps data";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow to scan pages in library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -403,7 +429,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = edu.umich.baroncpz.SmartNoteApp;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.umich.kasweet.SmartNoteApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

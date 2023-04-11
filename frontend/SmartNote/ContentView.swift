@@ -4,7 +4,6 @@
 //
 //  Created by Tim Stauder on 3/14/23.
 //
-
 import SwiftUI
 import UIKit
 import Photos
@@ -16,20 +15,20 @@ struct ContentView: View {
     @State private var isImagePickerDisplay = false
     @State private var isLinkActive = false
     @State private var recognizedText: String = ""
-    @State private var parsedText: [String: [String]] = [:]
+    @State private var parsedText: [String: [String]] = ["keywords": []]
     @State private var isParsingText = false
 
 
     var body: some View {
         NavigationView {
-            
+
             VStack {
                 Text("Take a picture of your journal to see related media")
                         .font(.title2)
                         .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                         .padding(.top, 20)
-                
+
                 if selectedImage != nil {
                     Image(uiImage: selectedImage!)
                         .resizable()
@@ -79,7 +78,7 @@ struct ContentView: View {
                                     }
                                 }
                         }
-                        
+
                     }
                 }.frame(height: 100)
             }.navigationBarTitle("SmartNote")
@@ -88,7 +87,7 @@ struct ContentView: View {
                 }
         }
     }
-    
+
     private func recognizeTextFromImage(_ image: UIImage) {
         guard let cgImage = image.cgImage else { return }
 //        guard let cgImage = imageWithText.image?.cgImage else {return}
@@ -101,14 +100,14 @@ struct ContentView: View {
                 return observation.topCandidates(1).first?.string
             }
             self.recognizedText = recognizedStrings.joined(separator: "\n")
-            
+
             let url = URL(string: "https://3.15.29.245/keywords")!
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
 
-            
+
             let jsonObj = ["text": self.recognizedText]
             guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonObj) else {
                 print("postExtractKeywords: jsonData serialization error")
@@ -143,9 +142,6 @@ struct ContentView: View {
     }
 }
 
-
-
-
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
@@ -154,12 +150,13 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
-    @State private var dates: [String] = ["12/31/2022", "12/21/2022"]
+    @State private var dates: [String] = ["03/28/2023", "03/30/2023"]
     @State private var keywords: [String] = ["people"]
     @State private var isEditing = false
-    @State public var parsedText: [String: [String]]
+    @State public var parsedText: [String: [String]] = ["keywords": []]
     @State private var dateText = ""
-    
+    @State private var shouldShowDestination = false
+
     var body: some View {
         VStack {
             Text("Here is the infomration parsed from your journal entry, please edit or add        information that was missed.")
@@ -204,7 +201,7 @@ struct KeywordView: View {
                 }
                 .onDelete(perform: delete)
             }
-            
+
             HStack {
                 if isEditing {
                     Button(action: {
@@ -224,71 +221,93 @@ struct KeywordView: View {
                         Text("Edit")
                     }
                 }
-                
+
                 TextField("New keyword", text: $newKeyword, onCommit: addKeyword)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
-                
+
                 Button(action: addKeyword) {
                     Image(systemName: "plus")
                 }
             }
-            
-            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos())) {
-                Text("Search Related Photos")
-                Image(systemName: "chevron.right")
+
+            Button(action: {
+                shouldShowDestination = true
+            }) {
+                Text("Tap here to go to the destination view:")
             }
+
+            NavigationLink(
+                destination: LazyView(
+                    SmartNoteARView(
+                        keywords: keywords,
+                        dates: dates
+                    )
+                ),
+                isActive: Binding(
+                get: { shouldShowDestination },
+                set: { newValue in
+                    if !newValue {
+                        shouldShowDestination = newValue
+                    }
+                })
+            ) {
+                EmptyView()
+            }
+            .hidden()
         }
         .navigationTitle("Keywords and Date")
     }
-    
+
     func addKeyword() {
         guard !newKeyword.trimmingCharacters(in: .whitespaces).isEmpty else {
             return
         }
-        
+
         withAnimation {
             parsedText["keywords"]?.append(newKeyword)
         }
-        
+
         newKeyword = ""
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to:nil, from:nil, for:nil)
     }
-    
+
     func delete(at offsets: IndexSet) {
         withAnimation {
             parsedText["keywords"]?.remove(atOffsets: offsets)
         }
     }
-    
+
     func getKeywords() -> Array<String> {
         // TODO: we want to return parsedText["keywords"] instead of the preset list of keywords
         // not sure if this works but if i just do return parsedText["keywords"] ?? [] it crashes
         keywords = parsedText["keywords"] ?? []
         return keywords
     }
-    
+
     func getDates() -> Array<String>? {
         return dates
     }
-    
+
     // Use this one when completed AR View modification
 //    func findPhotos() -> Array<Array<String>> {
 //        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
 //        let videosIdentifier = showVideosForKeywords(keywords: keywords)
 //        return [photosIdentifier, videosIdentifier]
 //    }
+
+
 }
 
 
-// Delete this function after activate the one above
-func findPhotos() -> [String] {
-    let temp = KeywordView()
-    let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords(), time: temp.getDates() ?? [])
-    return photosIdentifier
-}
+struct LazyView<Content: View>: View {
+    let build: () -> Content
 
-func findVideos() -> [String] {
-    
-    return []
+    init(_ build: @autoclosure @escaping () -> Content) {
+        self.build = build
+    }
+
+    var body: Content {
+        build()
+    }
 }

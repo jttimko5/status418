@@ -4,7 +4,6 @@
 //
 //  Created by Baron Chen on 2023/3/18.
 //
-
 import SwiftUI
 import Photos
 import Vision
@@ -116,7 +115,6 @@ func returnImagesForDate(fetchOptions: PHFetchOptions) -> (Int, [String]) {
     return (count, photoURLs)
 }
 
-
 func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
     var photoURLs: [String] = []
     var matchedCount = 0
@@ -130,6 +128,8 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
             dates.append(Calendar.current.date(from: DateComponents(year: year, month: month, day: day))!)
         }
     }
+    print("showPhotosForKeywords called")
+    print(dates)
     
     for date in dates {
         let start = Calendar.current.startOfDay(for: date)
@@ -177,15 +177,13 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
             if newestDate >= dateRange {
                 newestDate = Date()
             } else {
-                newestDate = calendar.startOfDay(for: newestDate)
                 newestDate = calendar.date(byAdding: .day, value: 5, to: newestDate)!
             }
             
-            oldestDate = calendar.startOfDay(for: oldestDate)
             oldestDate = calendar.date(byAdding: .day, value: -5, to: oldestDate)!
         } else {
-            oldestDate = calendar.startOfDay(for: dates[0])
-            oldestDate = calendar.date(byAdding: .day, value: -5, to: oldestDate)!
+            oldestDate = calendar.date(byAdding: .day, value: -5, to: dates[0])!
+
         }
 
         var predicates: [NSPredicate] = []
