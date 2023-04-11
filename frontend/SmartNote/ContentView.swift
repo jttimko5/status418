@@ -16,11 +16,20 @@ struct ContentView: View {
     @State private var isImagePickerDisplay = false
     @State private var isLinkActive = false
     @State private var recognizedText: String = ""
+    @State private var parsedText: [String: [String]] = [:]
+    @State private var isParsingText = false
+
 
     var body: some View {
         NavigationView {
             
             VStack {
+                Text("Take a picture of your journal to see related media")
+                        .font(.title2)
+                        .foregroundColor(.black)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 20)
+                
                 if selectedImage != nil {
                     Image(uiImage: selectedImage!)
                         .resizable()
@@ -49,23 +58,28 @@ struct ContentView: View {
                             .foregroundColor(Color.blue)
                     }
                     ZStack {
-                        NavigationLink(destination: KeywordView(recognizedText: recognizedText), isActive: $isLinkActive) {
-                            EmptyView()
-                        }
-                        Image(systemName: "arrow.right")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 25)
-                            .foregroundColor(Color.blue)
-                            .opacity(selectedImage == nil ? 0.2 : 1.0) // make the arrow image transparent when no image is selected
-                            .onTapGesture {
-                                if selectedImage != nil {
-                                    if let image = selectedImage {
-                                        recognizeTextFromImage(image)
-                                    }
-                                    self.isLinkActive = true
-                                }
+                        if self.isParsingText {
+                            ProgressView()
+                        } else {
+                            NavigationLink(destination: KeywordView(parsedText: parsedText), isActive: $isLinkActive) {
+                                EmptyView()
                             }
+                            Image(systemName: "arrow.right")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 25)
+                                .foregroundColor(Color.blue)
+                                .opacity(selectedImage == nil ? 0.2 : 1.0) // make the arrow image transparent when no image is selected
+                                .onTapGesture {
+                                    if selectedImage != nil {
+                                        if let image = selectedImage {
+                                            recognizeTextFromImage(image)
+                                        }
+                                        self.isLinkActive = true
+                                    }
+                                }
+                        }
+                        
                     }
                 }.frame(height: 100)
             }.navigationBarTitle("SmartNote")
@@ -87,6 +101,38 @@ struct ContentView: View {
                 return observation.topCandidates(1).first?.string
             }
             self.recognizedText = recognizedStrings.joined(separator: "\n")
+            
+            let url = URL(string: "https://3.15.29.245/keywords")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+
+            
+            let jsonObj = ["text": self.recognizedText]
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonObj) else {
+                print("postExtractKeywords: jsonData serialization error")
+                return
+            }
+            request.httpBody = jsonData
+
+            self.isParsingText = true
+            let session = URLSession.shared
+            session.dataTask(with: request) { (data, response, error) in
+                if let response = response {
+                    print(response)
+                }
+
+                if let data = data {
+                    do {
+                        let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: [String]]
+                        self.parsedText = json ?? [:]
+                    } catch {
+                        print(error)
+                    }
+                }
+                self.isParsingText = false
+            }.resume()
         }
         request.recognitionLevel = .accurate
         do {
@@ -108,19 +154,60 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
-    @State private var keywords = ["people", "woman", "man"]
+    @State private var keywords: [String] = ["people"]
     @State private var isEditing = false
-    var recognizedText: String
+    @State public var parsedText: [String: [String]]
+    @State private var dateText = ""
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd/yyyy"
+        return formatter
+    }()
+    init(parsedText: [String: [String]]) {
+        self._parsedText = State(initialValue: parsedText)
+        if let dateString = parsedText["dates"]?.first {
+            let oldFormatter = DateFormatter()
+            oldFormatter.dateFormat = "yyyy-MM-dd"
+            if let date = oldFormatter.date(from: dateString) {
+                let newFormatter = DateFormatter()
+                newFormatter.dateFormat = "MM/dd/yyyy"
+                let newDateString = newFormatter.string(from: date)
+                self.parsedText["dates"]?[0] = newDateString
+            }
+        }
+    }
     
     var body: some View {
         VStack {
+            Text("Here is the infomration parsed from your journal entry, please edit or add        information that was missed.")
+                .font(.title2)
+                .foregroundColor(.black)
+                .multilineTextAlignment(.center)
+                .padding(.top, 20)
+            TextField("Journal Date :", text: $dateText)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .frame(maxWidth: 250)
+                .onAppear {
+                    if let date = parsedText["dates"]?.first {
+                        let year = String(date.dropLast(6))
+                        let day = String(date.dropFirst(8))
+                        let month = String(String(date.dropFirst(5)).dropLast(3))
+                        let result = month + "/" + day + "/" + year
+                        parsedText["dates"] = [result]
+                        dateText = result
+                    }
+                }
+                .onChange(of: dateText) { newDateText in
+                    parsedText["dates"] = [newDateText]
+                }
+
             List {
-                ForEach(keywords.indices, id: \.self) { index in
-                    let keyword = keywords[index]
+                ForEach(parsedText["keywords"]!.indices, id: \.self) { index in
+                    let keyword = parsedText["keywords"]![index]
                     if isEditing {
                         TextField("Enter keyword", text: Binding(
                             get: { keyword },
-                            set: { keywords[index] = $0 }
+                            set: { parsedText["keywords"]![index] = $0 }
                         ))
                     } else {
                         Button(action: {
@@ -134,9 +221,6 @@ struct KeywordView: View {
                 }
                 .onDelete(perform: delete)
             }
-            
-            
-            Text("Recognized text: \(recognizedText)")
             
             HStack {
                 if isEditing {
@@ -172,7 +256,7 @@ struct KeywordView: View {
                 Image(systemName: "chevron.right")
             }
         }
-        .navigationTitle("Keywords")
+        .navigationTitle("Keywords and Date")
     }
     
     func addKeyword() {
@@ -181,7 +265,7 @@ struct KeywordView: View {
         }
         
         withAnimation {
-            keywords.append(newKeyword)
+            parsedText["keywords"]?.append(newKeyword)
         }
         
         newKeyword = ""
@@ -190,11 +274,14 @@ struct KeywordView: View {
     
     func delete(at offsets: IndexSet) {
         withAnimation {
-            keywords.remove(atOffsets: offsets)
+            parsedText["keywords"]?.remove(atOffsets: offsets)
         }
     }
     
     func getKeywords() -> Array<String> {
+        // TODO: we want to return parsedText["keywords"] instead of the preset list of keywords
+        // not sure if this works but if i just do return parsedText["keywords"] ?? [] it crashes
+        keywords = parsedText["keywords"] ?? []
         return keywords
     }
     
@@ -207,9 +294,10 @@ struct KeywordView: View {
 }
 
 
+
 // Delete this function after activate the one above
 func findPhotos() -> [String] {
-    let temp = KeywordView(recognizedText: "")
+    let temp = KeywordView(parsedText: [:])
     let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords())
     return photosIdentifier
 }
