@@ -16,28 +16,19 @@ import Vision
 
 struct SmartNoteARView: View {
     var IdentifierInput: Array<String>
-//    @StateObject private var viewModel = SmartNoteARViewModel(
-//        urls:
-//        [
-//            // Random test URLs
-//            "https://www.applesfromny.com/wp-content/uploads/2020/06/SnapdragonNEW.png",
-//            "https://www.applesfromny.com/wp-content/uploads/2020/08/Evercrisp_NYAS-Apples2.png",
-//            "https://upload.wikimedia.org/wikipedia/commons/1/15/Red_Apple.jpg",
-//            "https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png",
-//            "https://www.applesfromny.com/wp-content/uploads/2020/08/Evercrisp_NYAS-Apples2.png",
-//            "https://upload.wikimedia.org/wikipedia/commons/1/15/Red_Apple.jpg",
-//            "https://www.applesfromny.com/wp-content/uploads/2020/05/20Ounce_NYAS-Apples2.png"
-//        ]
-//    )
     @StateObject private var viewModel: SmartNoteARViewModel
         
     init(IdentifierInput: Array<String>) {
         self.IdentifierInput = IdentifierInput
         self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput))
     }
-    init(IdentifierInput: Array<String>, fitnessdata: String) {
+//    init(IdentifierInput: Array<String>, fitnessdata: String) {
+//        self.IdentifierInput = IdentifierInput
+//        self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput, fitnessdata: fitnessdata))
+//    }
+    init(IdentifierInput: Array<String>, fitnessdata: String, videoIdentifier: Array<String>) {
         self.IdentifierInput = IdentifierInput
-        self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput, fitnessdata: fitnessdata))
+        self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput, fitnessdata: fitnessdata, videoIdentifiers: videoIdentifier))
     }
     @Environment(\.presentationMode) var presentationMode
     
@@ -45,13 +36,6 @@ struct SmartNoteARView: View {
         NavigationView {
             ARViewContainer(arView: viewModel.arView)
                 .edgesIgnoringSafeArea(.all)
-//                .navigationBarTitle(Text("SmartNote AR View"))
-//                .navigationBarTitleDisplayMode(.inline)
-//                .navigationBarItems(trailing: Button(action: {
-//                    presentationMode.wrappedValue.dismiss()
-//                }, label: {
-//                    Text("Close")
-//                }))
         }
     }
     
@@ -129,7 +113,7 @@ class SmartNoteARViewModel: ObservableObject {
 //            }
         }
     }
-    init(identifiers: Array<String>, fitnessdata: String) {
+    init(identifiers: Array<String>, fitnessdata: String, videoIdentifiers: Array<String>) {
         for (i, identifier) in identifiers.enumerated() {
             
             //Access photos by local identifiers
@@ -172,7 +156,6 @@ class SmartNoteARViewModel: ObservableObject {
                     self.arView.scene.addAnchor(anchor)
                 }
             }
-// TODO: Show video in AR
 //            else if asset.mediaType == .video {
 //                VideoARView(identifier: identifier)
 //            }
@@ -198,6 +181,21 @@ class SmartNoteARViewModel: ObservableObject {
             // Add interaction
             
         }
+        for (i, identifier) in videoIdentifiers.enumerated() {
+            
+            //Access photos by local identifiers
+            let assetResults = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
+            
+            //Check whether you can find the image
+            guard let asset = assetResults.firstObject else {
+                print("Could not find asset with local identifier: \(identifier)")
+                return
+            }
+            let options = PHContentEditingInputRequestOptions()
+            if asset.mediaType == .video {
+            VideoARView(identifier: identifier)
+            }
+        }
         }
 }
 
@@ -213,55 +211,174 @@ struct ARViewContainer: UIViewRepresentable {
 
 
 
-//TODO: Videos show in AR!
-//class VideoARView: ObservableObject {
+class VideoARView: ObservableObject {
+
+    @IBOutlet weak var arView: ARSCNView!
+    @IBOutlet var pauseButton: UIButton!
+    @IBOutlet var progressSlider: UISlider!
+    @IBOutlet var nextButton: UIButton!
+
+    let player = AVPlayer()
+    var videoNode = SKVideoNode()
+
+    init() {
+    }
+
+    init(identifier: String) {
+
+        // Replace with the local identifier of the video you want to load
+        let localIdentifier = identifier
+
+        let options = PHVideoRequestOptions()
+        options.isNetworkAccessAllowed = true
+
+        PHImageManager.default().requestAVAsset(forVideo: PHAsset.fetchAssets(withLocalIdentifiers: [localIdentifier], options: nil).firstObject!, options: options) { asset, _, _ in
+            guard let asset = asset else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
+                self.videoNode = SKVideoNode(avPlayer: self.player)
+            }
+        }
+
+        let skScene = SKScene(size: CGSize(width: 1280, height: 720))
+        skScene.addChild(videoNode)
+
+        let plane = SCNPlane(width: 1.0, height: 0.5)
+        plane.firstMaterial?.isDoubleSided = true
+        plane.firstMaterial?.diffuse.contents = skScene
+
+        let planeNode = SCNNode(geometry: plane)
+        planeNode.eulerAngles.x = -.pi / 2
+
+        let configuration = ARWorldTrackingConfiguration()
+        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+
+        arView.scene.rootNode.addChildNode(planeNode)
+    }
+
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        if let videoAnchor = anchor as? ARImageAnchor, videoAnchor == arView.session.currentFrame?.anchors.first {
+            player.play()
+        }
+    }
+    //    @IBAction func pauseButtonTapped(_ sender: Any) {
+    //        if player?.rate == 0 {
+    //            // Player is currently paused, so play it
+    //            player?.play()
+    //            pauseButton.setTitle("Pause", for: .normal)
+    //        } else {
+    //            // Player is currently playing, so pause it
+    //            player?.pause()
+    //            pauseButton.setTitle("Play", for: .normal)
+    //        }
+    //    }
+    //    @IBAction func progressSliderValueChanged(_ sender: UISlider) {
+    //        if let player = player {
+    //            player.seek(to: CMTime(seconds: Double(sender.value), preferredTimescale: 1))
+    //        }
+    //    }
+    //
+    //    @IBAction func nextButtonTapped(_ sender: Any) {
+    //        currentVideoIndex = (currentVideoIndex + 1) % videoNodes.count
+    //        playVideo()
+    //        sceneView.scene.rootNode.childNodes.filter { $0 != videoNodes[currentVideoIndex] }.forEach { $0.removeFromParentNode() }
+    //        sceneView.scene.rootNode.addChildNode(videoNodes[currentVideoIndex])
+    //    }
+
+}
+
+
+//class ARVideoDisplay: UIViewController, ARSCNViewDelegate {
 //
-//    @IBOutlet weak var arView: ARSCNView!
+//    @IBOutlet var sceneView: ARSCNView!
+//    @IBOutlet var pauseButton: UIButton!
+//    @IBOutlet var progressSlider: UISlider!
+//    @IBOutlet var nextButton: UIButton!
 //
-//    let player = AVPlayer()
-//    var videoNode = SKVideoNode()
+//    var player: AVPlayer?
+//    var playerLayer: AVPlayerLayer?
+//    var videoNodes: [SCNNode] = []
+//    var currentVideoIndex: Int = 0
 //
-//    init() {
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//
+//        sceneView.delegate = self
+//
+//        // Add container node for video content
+//        let videoContainerNode = SCNNode()
+//        sceneView.scene.rootNode.addChildNode(videoContainerNode)
+//
+//        // Create AVPlayerLayer and add to container node
+//        playerLayer = AVPlayerLayer(player: player)
+//        playerLayer?.frame = view.bounds
+//        playerLayer?.videoGravity = .resizeAspectFill
+//
+//        let videoNode = SCNNode()
+//        videoNode.geometry = SCNPlane(width: 1.0, height: 0.5)
+//        videoNode.geometry?.firstMaterial?.diffuse.contents = playerLayer
+//        videoNode.eulerAngles.x = -.pi / 2
+//        videoContainerNode.addChildNode(videoNode)
+//        videoNodes.append(videoNode)
 //    }
 //
-//    init(identifier: String) {
-//
-//        // Replace with the local identifier of the video you want to load
-//        let localIdentifier = identifier
-//
-//        let options = PHVideoRequestOptions()
-//        options.isNetworkAccessAllowed = true
-//
-//        PHImageManager.default().requestAVAsset(forVideo: PHAsset.fetchAssets(withLocalIdentifiers: [localIdentifier], options: nil).firstObject!, options: options) { asset, _, _ in
-//            guard let asset = asset else {
-//                return
-//            }
-//
-//            DispatchQueue.main.async {
-//                self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
-//                self.videoNode = SKVideoNode(avPlayer: self.player)
-//            }
-//        }
-//
-//        let skScene = SKScene(size: CGSize(width: 1280, height: 720))
-//        skScene.addChild(videoNode)
-//
-//        let plane = SCNPlane(width: 1.0, height: 0.5)
-//        plane.firstMaterial?.isDoubleSided = true
-//        plane.firstMaterial?.diffuse.contents = skScene
-//
-//        let planeNode = SCNNode(geometry: plane)
-//        planeNode.eulerAngles.x = -.pi / 2
+//    override func viewWillAppear(_ animated: Bool) {
+//        super.viewWillAppear(animated)
 //
 //        let configuration = ARWorldTrackingConfiguration()
-//        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+//        sceneView.session.run(configuration)
+//    }
 //
-//        arView.scene.rootNode.addChildNode(planeNode)
+//    override func viewWillDisappear(_ animated: Bool) {
+//        super.viewWillDisappear(animated)
+//
+//        sceneView.session.pause()
+//    }
+//
+//    func playVideo() {
+//        guard let videoURL = Bundle.main.url(forResource: "video\(currentVideoIndex)", withExtension: "mp4") else {
+//            print("Error: Could not find video file")
+//            return
+//        }
+//        player = AVPlayer(url: videoURL)
+//        playerLayer?.player = player
+//        player?.play()
+//    }
+//
+//    @IBAction func pauseButtonTapped(_ sender: Any) {
+//        if player?.rate == 0 {
+//            // Player is currently paused, so play it
+//            player?.play()
+//            pauseButton.setTitle("Pause", for: .normal)
+//        } else {
+//            // Player is currently playing, so pause it
+//            player?.pause()
+//            pauseButton.setTitle("Play", for: .normal)
+//        }
+//    }
+//
+//
+//    @IBAction func progressSliderValueChanged(_ sender: UISlider) {
+//        if let player = player {
+//            player.seek(to: CMTime(seconds: Double(sender.value), preferredTimescale: 1))
+//        }
+//    }
+//
+//    @IBAction func nextButtonTapped(_ sender: Any) {
+//        currentVideoIndex = (currentVideoIndex + 1) % videoNodes.count
+//        playVideo()
+//        sceneView.scene.rootNode.childNodes.filter { $0 != videoNodes[currentVideoIndex] }.forEach { $0.removeFromParentNode() }
+//        sceneView.scene.rootNode.addChildNode(videoNodes[currentVideoIndex])
 //    }
 //
 //    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-//        if let videoAnchor = anchor as? ARImageAnchor, videoAnchor == arView.session.currentFrame?.anchors.first {
-//            player.play()
-//        }
+//        guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
+//
+//        // Resize video node to match plane size
+//        let size = CGSize(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
+//        videoNodes.forEach { $0.scale = SCNVector3(size.width, 1.0, size.height) }
 //    }
 //}

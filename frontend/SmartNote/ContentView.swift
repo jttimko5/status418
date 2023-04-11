@@ -176,7 +176,8 @@ struct KeywordView: View {
                 }
             }
             
-            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos(), fitnessdata: "steps walked: \n1190 steps")) {
+            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos(), fitnessdata: "steps walked: \n1190 steps",
+                                                        videoIdentifier: ["1273846"])) {
                 Text("Search Related Photos")
                 Image(systemName: "chevron.right")
             }
