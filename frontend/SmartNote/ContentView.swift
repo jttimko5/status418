@@ -159,7 +159,7 @@ struct KeywordView: View {
 
     var body: some View {
         VStack {
-            Text("Here is the infomration parsed from your journal entry, please edit or add        information that was missed.")
+            Text("Here is the infomration parsed from your journal entry, please edit or add information that was missed.")
                 .font(.title2)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)

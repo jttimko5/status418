@@ -75,12 +75,12 @@ class SmartNoteARViewModel: ObservableObject {
             }
         }
         // videos
-        DispatchQueue.global().async {
-            let identifiers: String = self.findVideos()
-            DispatchQueue.main.async {
-                self.displayVideo(identifier: "D20156CC-2A09-4FBF-BF7D-19C516E3D5A3/L0/001")
-            }
-        }
+//        DispatchQueue.global().async {
+//            let identifiers: String = self.findVideos()
+//            DispatchQueue.main.async {
+//                self.displayVideo(identifier: "D20156CC-2A09-4FBF-BF7D-19C516E3D5A3/L0/001")
+//            }
+//        }
     }
     
     func handleSteps(stepsInput: HealthKitViewModel) {
@@ -393,7 +393,7 @@ class SmartNoteARViewModel: ObservableObject {
         
         for date in dates ?? [] {
             let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "MM/dd/yyy"
+            dateFormatter.dateFormat = "MM/dd/yyyy"
             dateFormatter.timeZone = TimeZone.current
             dateFormatter.locale = Locale.current
             let date_object: Date? = dateFormatter.date(from: date)
