@@ -16,6 +16,7 @@
 		21DF8E1429C0CCCB0017A5ED /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DF8E1329C0CCCB0017A5ED /* ImageView.swift */; };
 		4213ADDF29C7226B003393B3 /* SmartNoteARView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4213ADDE29C7226B003393B3 /* SmartNoteARView.swift */; };
 		6AC96120BA9B40CF83594B48 /* Pods_SmartNote.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 265EAC97AB6F48788F889246 /* Pods_SmartNote.framework */; };
+		FDA5820429E47FF100CD9B04 /* Promises in Frameworks */ = {isa = PBXBuildFile; productRef = FDA5820329E47FF100CD9B04 /* Promises */; };
 		FDC81B8E29C69E6100AC5E54 /* ImageExtraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC81B8D29C69E6100AC5E54 /* ImageExtraction.swift */; };
 /* End PBXBuildFile section */
 
@@ -43,6 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FDA5820429E47FF100CD9B04 /* Promises in Frameworks */,
 				6AC96120BA9B40CF83594B48 /* Pods_SmartNote.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -130,6 +132,9 @@
 			dependencies = (
 			);
 			name = SmartNote;
+			packageProductDependencies = (
+				FDA5820329E47FF100CD9B04 /* Promises */,
+			);
 			productName = SmartNote;
 			productReference = 21DF8E0229C0C8200017A5ED /* SmartNote.app */;
 			productType = "com.apple.product-type.application";
@@ -158,6 +163,9 @@
 				Base,
 			);
 			mainGroup = 21DF8DF929C0C8200017A5ED;
+			packageReferences = (
+				FDA5820229E47FF100CD9B04 /* XCRemoteSwiftPackageReference "promises" */,
+			);
 			productRefGroup = 21DF8E0329C0C8200017A5ED /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -451,6 +459,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FDA5820229E47FF100CD9B04 /* XCRemoteSwiftPackageReference "promises" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/promises.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FDA5820329E47FF100CD9B04 /* Promises */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDA5820229E47FF100CD9B04 /* XCRemoteSwiftPackageReference "promises" */;
+			productName = Promises;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 21DF8DFA29C0C8200017A5ED /* Project object */;
 }
