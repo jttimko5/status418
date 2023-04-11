@@ -179,11 +179,7 @@ class SmartNoteARViewModel: ObservableObject {
         arView.scene.addAnchor(anchor)
         
         // Add interaction to the entity
-        let albumGesture = EntityGestureRecognizer(for: entity, on: arView)
-        albumGesture.addTarget(self, action: #selector(handleAlbumGesture(_:)))
-        arView.addGestureRecognizer(albumGesture)
-        entity.generateCollisionShapes(recursive: true)
-        arView.installGestures(.all, for: entity)
+
         
         // Add double tap gesture recognizer
         let doubleTapGestureRecognizer = EntityDoubleTapGestureRecognizer(
@@ -193,6 +189,10 @@ class SmartNoteARViewModel: ObservableObject {
             albumAssets: assets
         )
         arView.addGestureRecognizer(doubleTapGestureRecognizer)
+//                let albumGesture = EntityGestureRecognizer(for: entity, on: arView)
+//                albumGesture.addTarget(self, action: #selector(handleAlbumGesture(_:)))
+//                arView.addGestureRecognizer(albumGesture)
+//                entity.generateCollisionShapes(recursive: true)
     }
     
     func displayVideo(identifier: String) {
@@ -207,6 +207,7 @@ class SmartNoteARViewModel: ObservableObject {
                 let player = AVQueuePlayer(playerItem: playerItem) // Replace AVPlayer with AVQueuePlayer
                 
                 let playerNode = VideoPlayerNode(avPlayer: player)
+                playerNode.name = "VideoPlayerNode"
                 let playerEntity = playerNode.generateModelEntity(width: 0.4, height: 0.3)
                 
                 let collisionShape = ShapeResource.generateBox(size: [0.2, 0.0001, 0.2])
@@ -218,18 +219,23 @@ class SmartNoteARViewModel: ObservableObject {
                 let anchor = AnchorEntity(world: [0.63, -0.5, -0.5])
                 anchor.addChild(playerEntity)
                 self.arView.scene.addAnchor(anchor)
-                
-                let playerLooper = AVPlayerLooper(player: player, templateItem: playerItem)
-                
+//              let playerLooper = AVPlayerLooper(player: player, templateItem: playerItem)
                 // Create and configure the play/pause button
                 let playPauseButton = UIButton(type: .system)
-                playPauseButton.setTitle("Pause", for: .normal)
+                playPauseButton.setTitle("Play", for: .normal)
                 playPauseButton.frame = CGRect(x: 325, y: 45, width: 60, height: 30)
                 playPauseButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)
                 playPauseButton.addTarget(self, action: #selector(self.playPauseButtonTapped(_:)), for: .touchUpInside)
                 self.arView.addSubview(playPauseButton)
-                
                 // Play the video
+                player.play()
+                player.play()
+                player.play()
+                player.play()
+                player.play()
+                player.play()
+                player.play()
+                player.play()
                 player.play()
             }
         }
