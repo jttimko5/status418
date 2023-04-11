@@ -29,9 +29,13 @@ dictConfig({
             'format': '[%(asctime)s] %(name)s - %(levelname)s in %(module)s: %(message)s',
         }},
     'filters': {
-        'filterExtractor': {
+        'filterServices': {
             '()': FilterModule,
             'module_name': 'services',
+        },
+        'filterExtractor': {
+            '()': FilterModule,
+            'module_name': 'extractor',
         },
         'filter_internal': {
             '()': FilterModule,
@@ -43,7 +47,7 @@ dictConfig({
             'class': 'logging.StreamHandler',
             'stream': 'ext://flask.logging.wsgi_errors_stream',
             'formatter': 'default',
-            'filters': ['filterExtractor']
+            'filters': ['filterServices', 'filterExtractor']
         },
         'file': {
             'class': 'logging.FileHandler',
@@ -51,11 +55,17 @@ dictConfig({
             'encoding': 'utf-8',
             'formatter': 'default',
             'filters': ['filter_internal']
+        },
+        'everything_file': {
+            'class': 'logging.FileHandler',
+            'filename': 'everything.log',
+            'encoding': 'utf-8',
+            'formatter': 'default',
         }
     },
     'root': {
         'level': 'INFO',
-        'handlers': ['wsgi', 'file']
+        'handlers': ['wsgi', 'file', 'everything_file']
     }
 })
 
