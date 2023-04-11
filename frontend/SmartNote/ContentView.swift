@@ -240,8 +240,8 @@ struct KeywordView: View {
             NavigationLink(
                 destination: LazyView(
                     SmartNoteARView(
-                        keywords: keywords,
-                        dates: dates
+                        keywords: parsedText["keywords"] ?? [],
+                        dates: parsedText["dates"] ?? []
                     )
                 ),
                 isActive: Binding(
