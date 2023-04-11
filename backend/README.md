@@ -23,12 +23,17 @@
 Install
 - Use poetry: `poetry install`
 - There is an extra dependency that needs to be installed with pip
-  - within env, `pip install --no-deps pygooglenews`
+  - within python venv, `pip install --no-deps pygooglenews`
 
-Make sure you have your OpenAI API key set as an env variable:
-- In bash/zsh profile, add `export OPENAI_API_KEY="sk-..."`
+Make sure you have your API keys set as an env variables:
+- In bash/zsh profile add: 
+  - `export OPENAI_API_KEY="sk-..."`
+  - `export SCRAPING_BEE_API="..."`
+- Or in an .env file (needed for gunicorn, add path to this file during setup)
+  - `OPENAI_API_KEY="sk-..."`
+  - `SCRAPING_BEE_API="..."`
 
-To run:
+To run locally:
 - Activate python shell: `poetry shell`
 - Run flask: `flask --app backend run --port=8000`
 - Or run flask in debug mode: `flask --app backend run --port=8000 --debug`

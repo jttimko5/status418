@@ -20,7 +20,7 @@ def get_news(dates: list[str]) -> list[dict]:
     gn = GoogleNews(lang='en', country='US')
     query = 'top stories'
 
-    for start_date in dates[:5]:
+    for start_date in dates[:1]:
         end_date = str(date.fromisoformat(start_date) + timedelta(days=1))
         query_result = gn.search(query, helper=True,
                                  from_=start_date, to_=end_date,
