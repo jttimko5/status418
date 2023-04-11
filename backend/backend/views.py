@@ -21,13 +21,23 @@ def keywords():
     if not data:
         return jsonify({
             'status': 400,
-            'error': 'Failed to decode JSON object'
+            'error': 'Failed to decode JSON object.'
         }), 400
 
     if "text" not in data:
         return jsonify({
             'status': 400,
-            'error': 'Missing field \'text\''
+            'error': 'Missing field \'text\'.'
+        }), 400
+    if not data['text']:
+        return jsonify({
+            'status': 400,
+            'error': 'Field \'text\' is empty.'
+        }), 400
+    if not isinstance(data['text'], str):
+        return jsonify({
+            'status': 400,
+            'error': 'Field \'text\', expected String got %s.' % type(data['text'])
         }), 400
 
     return jsonify(extract_keywords(data['text'])), 200
