@@ -7,11 +7,14 @@
 
 import SwiftUI
 import UIKit
+import Photos
+import Vision
 
 struct ContentView: View {
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
     @State private var selectedImage: UIImage?
     @State private var isImagePickerDisplay = false
+    @State private var isLinkActive = false
     
 //    API TEST STUFF      =====================================================
 //    @State var message = "Some short sample text."
@@ -102,7 +105,6 @@ struct ContentView: View {
 //                        }
 //                    }
 //                }.resume()
-//                
 //            }) {
 //                Image(systemName: "paperplane")
 //                    .resizable()
@@ -122,21 +124,28 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
-    @State private var keywords = ["apple", "banana", "orange"]
+    @State private var dates: [String] = ["12/31/2022", "12/21/2022"]
+    @State private var keywords: [String] = []
     @State private var isEditing = false
-    @State private var editedKeyword = ""
-
+    
     var body: some View {
         VStack {
             List {
-                ForEach(keywords, id: \.self) { keyword in
+                ForEach(keywords.indices, id: \.self) { index in
+                    let keyword = keywords[index]
                     if isEditing {
                         TextField("Enter keyword", text: Binding(
-                            get: { keyword == editedKeyword ? editedKeyword : keyword },
-                            set: { newValue in editedKeyword = newValue }
+                            get: { keyword },
+                            set: { keywords[index] = $0 }
                         ))
                     } else {
-                        Text(keyword)
+                        Button(action: {
+                            withAnimation {
+                                isEditing = true
+                            }
+                        }) {
+                            Text(keyword)
+                        }
                     }
                 }
                 .onDelete(perform: delete)
@@ -147,8 +156,6 @@ struct KeywordView: View {
                     Button(action: {
                         withAnimation {
                             isEditing = false
-                            keywords[keywords.firstIndex(of: editedKeyword)!] = editedKeyword
-                            editedKeyword = ""
                         }
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to:nil, from:nil, for:nil)
                     }) {
@@ -158,7 +165,6 @@ struct KeywordView: View {
                     Button(action: {
                         withAnimation {
                             isEditing = true
-                            editedKeyword = keywords[0]
                         }
                     }) {
                         Text("Edit")
@@ -172,6 +178,11 @@ struct KeywordView: View {
                 Button(action: addKeyword) {
                     Image(systemName: "plus")
                 }
+            }
+            
+            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos())) {
+                Text("Search Related Photos")
+                Image(systemName: "chevron.right")
             }
         }
         .navigationTitle("Keywords")
@@ -195,5 +206,27 @@ struct KeywordView: View {
             keywords.remove(atOffsets: offsets)
         }
     }
+    
+    func getKeywords() -> Array<String> {
+        return keywords
+    }
+    
+    func getDates() -> Array<String>? {
+        return dates
+    }
+    
+    // Use this one when completed AR View modification
+//    func findPhotos() -> Array<Array<String>> {
+//        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
+//        let videosIdentifier = showVideosForKeywords(keywords: keywords)
+//        return [photosIdentifier, videosIdentifier]
+//    }
 }
 
+
+// Delete this function after activate the one above
+func findPhotos() -> [String] {
+    let temp = KeywordView()
+    let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords(), time: temp.getDates() ?? [])
+    return photosIdentifier
+}
