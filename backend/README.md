@@ -15,7 +15,10 @@
 
 ### Info
 
-Install using poetry: `poetry install`
+Install
+- Use poetry: `poetry install`
+- There is an extra dependency that needs to be installed with pip
+  - within env, `pip install pygooglenews`
 
 Make sure you have your OpenAI API key set as an env variable:
 - In bash/zsh profile, add `export OPENAI_API_KEY="sk-..."`
