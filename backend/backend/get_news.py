@@ -5,7 +5,7 @@ import time
 
 def get_news(keywords, dates):
     gn = GoogleNews(lang = 'en', country = 'US')
-    query = 'top stories -"COVID-19: Top news stories about the pandemic on"'
+    query = 'top stories BBC WSJ NYT AP BLOOMBERG -"COVID-19: Top news stories about the pandemic on"'
     # date is in YYYY-MM-DD format
     for date in dates:
         date_ints = date.split('-')

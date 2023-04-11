@@ -43,8 +43,8 @@ struct ContentView: View {
                         self.sourceType = .photoLibrary
                         self.isImagePickerDisplay.toggle()
 //                        TODO: remove these prints
-//                        print("============ Calendar event titles =============")
-//                        print(findEvents())
+                        print("============ Calendar event titles =============")
+                        print(findEvents())
                         print("============ Steps info =============")
                         print(findSteps())
                     }) {
@@ -243,9 +243,8 @@ func findPhotos() -> [String] {
     return photosIdentifier
 }
 
-func findEvents() -> [String]? {
-    let temp = KeywordView(recognizedText: "")
-    let dates = temp.getDates()
+func findEvents() -> String? {
+    let dates = getConvertedDates()
     if (dates != nil) {
         return pullEvents(dates: dates)
     }
