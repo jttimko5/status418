@@ -75,12 +75,12 @@ class SmartNoteARViewModel: ObservableObject {
             }
         }
         // videos
-//        DispatchQueue.global().async {
-//            let identifiers: String = self.findVideos()
-//            DispatchQueue.main.async {
-//                self.displayVideo(identifier: "D20156CC-2A09-4FBF-BF7D-19C516E3D5A3/L0/001")
-//            }
-//        }
+        DispatchQueue.global().async {
+            let identifiers: String = self.findVideos()
+            DispatchQueue.main.async {
+                self.displayVideo(identifier: identifiers)
+            }
+        }
     }
     
     func handleSteps(stepsInput: HealthKitViewModel) {
@@ -355,7 +355,7 @@ class SmartNoteARViewModel: ObservableObject {
         print("findPhotos called")
         print("keywords:", self.keywords)
         print("dates:", self.dates)
-        let videoIdentifier = fetchVideoIdentifier(withKeywords: ["4", "3", "0", "objects", "Bronx", "Haiyang Park", "People"])
+        let videoIdentifier = fetchVideoIdentifier(dates: self.dates)
         print("findVideos finished")
         print(videoIdentifier)
         return videoIdentifier

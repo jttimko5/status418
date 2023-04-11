@@ -116,7 +116,7 @@ func returnImagesForDate(fetchOptions: PHFetchOptions) -> (Int, [String]) {
 }
 
 func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
-    var keywords = keywords.map { $0.lowercased() }
+    let keywords = keywords.map { $0.lowercased() }
     var photoURLs: [String] = []
     var matchedCount = 0
     var totalSearch = 0

@@ -1,21 +1,25 @@
 import Photos
 
-func fetchVideoIdentifier(withKeywords keywords: [String]) -> String {
-    let options = PHFetchOptions()
-    options.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.video.rawValue)
-
-    let allVideos = PHAsset.fetchAssets(with: options)
-
+func fetchVideoIdentifier(dates: [String]) -> String {
     var matchingVideoIdentifier: String? = nil
+    
+    var videoDate = Date()
+    let comp = dates[0].components(separatedBy: "/")
+    if let month = Int(comp[0]), let day = Int(comp[1]), let year = Int(comp[2]) {
+        videoDate = Calendar.current.date(from: DateComponents(year: year, month: month, day: day))!
+    }
+    
+    let start = Calendar.current.startOfDay(for: videoDate)
+    let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
+    let fetchOptions = PHFetchOptions()
+    fetchOptions.predicate = NSPredicate(format: "creationDate >= %@ AND creationDate < %@ AND mediaType == %d",
+                                         start as NSDate, end as NSDate, PHAssetMediaType.video.rawValue)
+    
+    let allVideos = PHAsset.fetchAssets(with: fetchOptions)
 
     allVideos.enumerateObjects { (asset, _, stop) in
-        for keyword in keywords {
-            if asset.localIdentifier.lowercased().contains(keyword.lowercased()) {
-                matchingVideoIdentifier = asset.localIdentifier
-                stop.pointee = true
-                break
-            }
-        }
+        matchingVideoIdentifier = asset.localIdentifier
+        stop.pointee = true
     }
 
     print("We found one video")
