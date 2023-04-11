@@ -158,24 +158,6 @@ struct KeywordView: View {
     @State private var isEditing = false
     @State public var parsedText: [String: [String]]
     @State private var dateText = ""
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd/yyyy"
-        return formatter
-    }()
-    init(parsedText: [String: [String]]) {
-        self._parsedText = State(initialValue: parsedText)
-        if let dateString = parsedText["dates"]?.first {
-            let oldFormatter = DateFormatter()
-            oldFormatter.dateFormat = "yyyy-MM-dd"
-            if let date = oldFormatter.date(from: dateString) {
-                let newFormatter = DateFormatter()
-                newFormatter.dateFormat = "MM/dd/yyyy"
-                let newDateString = newFormatter.string(from: date)
-                self.parsedText["dates"]?[0] = newDateString
-            }
-        }
-    }
     
     var body: some View {
         VStack {
