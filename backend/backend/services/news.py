@@ -1,4 +1,5 @@
 import logging
+import os
 import pprint
 
 from pygooglenews import GoogleNews
@@ -21,7 +22,9 @@ def get_news(dates: list[str]) -> list[dict]:
 
     for start_date in dates[:5]:
         end_date = str(date.fromisoformat(start_date) + timedelta(days=1))
-        query_result = gn.search(query, helper=True, from_=start_date, to_=end_date)
+        query_result = gn.search(query, helper=True,
+                                 from_=start_date, to_=end_date,
+                                 scraping_bee=os.getenv('SCRAPING_BEE_API'))
 
         logging.debug('Query result for %s: %s' % (start_date, query_result))
 
