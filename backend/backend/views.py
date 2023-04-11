@@ -1,11 +1,8 @@
-import functools
-import logging
-
 from flask import (
     Blueprint, jsonify, request
 )
 
-from .extractor.extractor import extract_keywords
+from .services import get_news, extract_keywords
 
 bp = Blueprint('auth', __name__, url_prefix='/')
 
@@ -40,7 +37,10 @@ def keywords():
             'error': 'Field \'text\', expected String got %s.' % type(data['text'])
         }), 400
 
-    return jsonify(extract_keywords(data['text'])), 200
+    results = extract_keywords(data['text'])
+    results['news'] = get_news(results['dates'])
+
+    return jsonify(results), 200
 
 
 # if __name__ == '__main__':

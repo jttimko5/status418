@@ -31,7 +31,7 @@ dictConfig({
     'filters': {
         'filterExtractor': {
             '()': FilterModule,
-            'module_name': 'extractor',
+            'module_name': 'services',
         },
         'filter_internal': {
             '()': FilterModule,
