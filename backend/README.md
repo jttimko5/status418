@@ -10,8 +10,13 @@
     Route: /keywords
     Method: POST
     Params: {"text": String}
-    Returns: {"dates": [String], "keywords": [String]}
-    Extracts the keywords and dates from the passed in text.
+    Returns: {
+                "dates": [String], 
+                "keywords": [String], 
+                "news": [Object {"title": String, "source": String, "link": String}]
+              }
+    Extracts the keywords and dates from the passed in text 
+    and gets top news arcticles from the dates found.
 
 ### Info
 
