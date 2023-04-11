@@ -224,7 +224,8 @@ class SmartNoteARViewModel: ObservableObject {
                 // Create and configure the play/pause button
                 let playPauseButton = UIButton(type: .system)
                 playPauseButton.setTitle("Pause", for: .normal)
-                playPauseButton.frame = CGRect(x: 20, y: 40, width: 60, height: 30)
+                playPauseButton.frame = CGRect(x: 325, y: 45, width: 60, height: 30)
+                playPauseButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)
                 playPauseButton.addTarget(self, action: #selector(self.playPauseButtonTapped(_:)), for: .touchUpInside)
                 self.arView.addSubview(playPauseButton)
                 
