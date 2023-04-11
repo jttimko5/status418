@@ -122,65 +122,78 @@ struct KeywordView: View {
     @State private var dates: [String] = ["12/31/2022", "12/21/2022"]
     @State private var keywords: [String] = []
     @State private var isEditing = false
+    @State private var shouldShowDestination = false
+    @State private var identifiers: [String] = []
     
     var body: some View {
-        VStack {
-            List {
-                ForEach(keywords.indices, id: \.self) { index in
-                    let keyword = keywords[index]
+            VStack {
+                List {
+                    ForEach(keywords.indices, id: \.self) { index in
+                        let keyword = keywords[index]
+                        if isEditing {
+                            TextField("Enter keyword", text: Binding(
+                                get: { keyword },
+                                set: { keywords[index] = $0 }
+                            ))
+                        } else {
+                            Button(action: {
+                                withAnimation {
+                                    isEditing = true
+                                }
+                            }) {
+                                Text(keyword)
+                            }
+                        }
+                    }
+                    .onDelete(perform: delete)
+                }
+                
+                HStack {
                     if isEditing {
-                        TextField("Enter keyword", text: Binding(
-                            get: { keyword },
-                            set: { keywords[index] = $0 }
-                        ))
+                        Button(action: {
+                            withAnimation {
+                                isEditing = false
+                            }
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to:nil, from:nil, for:nil)
+                        }) {
+                            Text("Done")
+                        }
                     } else {
                         Button(action: {
                             withAnimation {
                                 isEditing = true
                             }
                         }) {
-                            Text(keyword)
+                            Text("Edit")
                         }
                     }
-                }
-                .onDelete(perform: delete)
-            }
-            
-            HStack {
-                if isEditing {
-                    Button(action: {
-                        withAnimation {
-                            isEditing = false
-                        }
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to:nil, from:nil, for:nil)
-                    }) {
-                        Text("Done")
-                    }
-                } else {
-                    Button(action: {
-                        withAnimation {
-                            isEditing = true
-                        }
-                    }) {
-                        Text("Edit")
+                    
+                    TextField("New keyword", text: $newKeyword)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                        .onSubmit(addKeyword)
+                    
+                    Button(action: addKeyword) {
+                        Image(systemName: "plus")
                     }
                 }
                 
-                TextField("New keyword", text: $newKeyword, onCommit: addKeyword)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal)
-                
-                Button(action: addKeyword) {
-                    Image(systemName: "plus")
+                Button("Search Related Photos") {
+                    _ = findPhotos()
+                    shouldShowDestination = true // Activate the NavigationLink after running the function
                 }
+                .padding()
+                
+                NavigationLink(destination: SmartNoteARView(IdentifierInput: identifiers), isActive: $shouldShowDestination) {
+                    Text("Search Related Photos")
+                    Image(systemName: "chevron.right")
+                }
+                .hidden()
+        
             }
-            
-            NavigationLink(destination: SmartNoteARView(IdentifierInput: findPhotos())) {
-                Text("Search Related Photos")
-                Image(systemName: "chevron.right")
-            }
-        }
-        .navigationTitle("Keywords")
+            .navigationTitle("Keywords")
+        
+        
     }
     
     func addKeyword() {
@@ -210,6 +223,43 @@ struct KeywordView: View {
         return dates
     }
     
+    func getConvertedDates() -> [Date?] {
+        
+        let dates = getDates()
+        
+        var list: [Date?] = []
+        
+        for date in dates ?? [] {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "MM/dd/yyy"
+            dateFormatter.timeZone = TimeZone.current
+            dateFormatter.locale = Locale.current
+            let date_object: Date? = dateFormatter.date(from: date)
+            list.append(date_object)
+        }
+        return list
+    }
+
+    func findPhotos() -> [String] {
+        
+        print("findPhotos keywords:", getKeywords())
+        identifiers = showPhotosForKeywords(keywords: getKeywords(), time: getDates() ?? [])
+        return identifiers
+    }
+    
+    func findEvents() -> String? {
+        let dates = getConvertedDates()
+        return pullEvents(dates: dates)
+    }
+
+    func findSteps() -> Void {
+        let dates = getConvertedDates()
+        let hkmodel = HealthKitViewModel()
+        if (dates[0] != nil) {
+            hkmodel.healthRequest(date: dates[0] ?? Date())
+        }
+    }
+    
     // Use this one when completed AR View modification
 //    func findPhotos() -> Array<Array<String>> {
 //        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
@@ -218,45 +268,9 @@ struct KeywordView: View {
 //    }
 }
 
-func getConvertedDates() -> [Date?] {
-    let temp = KeywordView()
-    let dates = temp.getDates()
-    
-    var list: [Date?] = []
-    
-    for date in dates ?? [] {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MM/dd/yyy"
-        dateFormatter.timeZone = TimeZone.current
-        dateFormatter.locale = Locale.current
-        let date_object: Date? = dateFormatter.date(from: date)
-        list.append(date_object)
-    }
-    return list
-}
 
-// Delete this function after activate the one above
-func findPhotos() -> [String] {
-    let temp = KeywordView()
-    print("findPhotos keywords:", temp.getKeywords())
-    let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords(), time: temp.getDates() ?? [])
-    return photosIdentifier
-}
 
-func findEvents() -> String? {
-    let dates = getConvertedDates()
-    if (dates != nil) {
-        return pullEvents(dates: dates)
-    }
-    return nil
-}
 
-func findSteps() -> Void {
-    let dates = getConvertedDates()
-    let hkmodel = HealthKitViewModel()
-    if (dates[0] != nil) {
-        hkmodel.healthRequest(date: dates[0] ?? Date())
-    }
 //    retrieveStepCount(date_in: dates![0]) { (steps, error) in
 //                print(error?.localizedDescription)
 //
@@ -265,4 +279,3 @@ func findSteps() -> Void {
 //                    print("Health kit Walked steps  \(steps ?? 0)")
 //                }
 //    }
-}
