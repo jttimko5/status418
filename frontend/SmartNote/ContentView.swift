@@ -283,7 +283,7 @@ struct KeywordView: View {
 
 // Delete this function after activate the one above
 func findPhotos() -> [String] {
-    let temp = KeywordView()
+    let temp = KeywordView(parsedText: [:])
     let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords(), time: temp.getDates() ?? [])
     return photosIdentifier
 }
