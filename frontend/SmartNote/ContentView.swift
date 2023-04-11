@@ -99,7 +99,7 @@ struct ContentView: View {
             let recognizedStrings = observations.compactMap { observation in
                 return observation.topCandidates(1).first?.string
             }
-            self.recognizedText = recognizedStrings.joined(separator: "\n")
+//            self.recognizedText = recognizedStrings.joined(separator: "\n")
 
             let url = URL(string: "https://3.15.29.245/keywords")!
             var request = URLRequest(url: url)
@@ -108,7 +108,7 @@ struct ContentView: View {
 
 
 
-            let jsonObj = ["text": self.recognizedText]
+            let jsonObj = ["text": recognizedStrings.joined(separator: "\n")]
             guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonObj) else {
                 print("postExtractKeywords: jsonData serialization error")
                 return
@@ -240,8 +240,8 @@ struct KeywordView: View {
             NavigationLink(
                 destination: LazyView(
                     SmartNoteARView(
-                        keywords: keywords,
-                        dates: dates
+                        keywords: parsedText["keywords"] ?? [],
+                        dates: parsedText["dates"] ?? []
                     )
                 ),
                 isActive: Binding(
