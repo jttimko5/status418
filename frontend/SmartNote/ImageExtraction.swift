@@ -2,7 +2,7 @@
 //  ImageExtraction.swift
 //  SmartNote
 //
-//  Created by Pengzhou Chen on 2023/3/18.
+//  Created by Baron Chen on 2023/3/18.
 //
 
 import SwiftUI
@@ -177,12 +177,15 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
             if newestDate >= dateRange {
                 newestDate = Date()
             } else {
+                newestDate = calendar.startOfDay(for: newestDate)
                 newestDate = calendar.date(byAdding: .day, value: 5, to: newestDate)!
             }
             
+            oldestDate = calendar.startOfDay(for: oldestDate)
             oldestDate = calendar.date(byAdding: .day, value: -5, to: oldestDate)!
         } else {
-            oldestDate = calendar.date(byAdding: .day, value: -5, to: dates[0])!
+            oldestDate = calendar.startOfDay(for: dates[0])
+            oldestDate = calendar.date(byAdding: .day, value: -5, to: oldestDate)!
         }
 
         var predicates: [NSPredicate] = []
@@ -217,8 +220,68 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
 }
 
 
+//import AVFoundation
+//import Vision
+//
+//func getVideoIdentifier(withKeywords keywords: [String], completion: @escaping (Int?) -> Void) {
+//    guard let asset = AVAsset(url: videoURL) else {
+//        completion(nil)
+//        return
+//    }
+//
+//    let imageGenerator = AVAssetImageGenerator(asset: asset)
+//    imageGenerator.appliesPreferredTrackTransform = true
+//
+//    var matchingKeywords = Set<String>(keywords)
+//    var foundIdentifier: Int?
+//
+//    let duration = CMTimeGetSeconds(asset.duration)
+//    let time = CMTimeMakeWithSeconds(duration / 2, preferredTimescale: 600)
+//
+//    let semaphore = DispatchSemaphore(value: 0)
+//
+//    imageGenerator.generateCGImagesAsynchronously(forTimes: [NSValue(time: time)]) { _, cgImage, _, _, _ in
+//        if let cgImage = cgImage {
+//            let ciImage = CIImage(cgImage: cgImage)
+//            let request = VNRecognizeTextRequest { request, error in
+//                if let results = request.results as? [VNRecognizedTextObservation] {
+//                    for result in results {
+//                        if let text = result.topCandidates(1).first?.string {
+//                            if matchingKeywords.contains(text) {
+//                                foundIdentifier = result.identifier
+//                                matchingKeywords.remove(text)
+//                                if matchingKeywords.isEmpty {
+//                                    break
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//                semaphore.signal()
+//            }
+//
+//            let handler = VNImageRequestHandler(ciImage: ciImage)
+//            do {
+//                try handler.perform([request])
+//            } catch {
+//                print("Error: \(error.localizedDescription)")
+//                semaphore.signal()
+//            }
+//        } else {
+//            semaphore.signal()
+//        }
+//    }
+//
+//    // Wait for the image generation and text recognition to complete
+//    semaphore.wait()
+//
+//    completion(foundIdentifier)
+//}
+
+
+
 // Video part still under working
-//func showVideosForKeywords(keywords: [String]) -> [String] {
+//func showVideosForKeywords(keywords: [String], time: [String]) -> [String] {
 //    var videoURLs: [String] = []
 //    var matchedCount = 0
 //
@@ -234,7 +297,7 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
 //
 //    // Enumerate the fetched videos and check their metadata for keywords
 //    fetchResult.enumerateObjects { asset, index, pointer in
-//        if matchedCount >= 2 {
+//        if matchedCount >= 1 {
 //            return
 //        }
 //        dispatchGroup.enter()
@@ -252,7 +315,7 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
 //                    let localIdentifier = asset.localIdentifier
 //                    videoURLs.append(localIdentifier)
 //                    matchedCount += 1
-//                    if matchedCount >= 2 {
+//                    if matchedCount >= 1 {
 //                        dispatchGroup.leave()
 //                        return
 //                    }

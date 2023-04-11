@@ -226,3 +226,8 @@ func findPhotos() -> [String] {
     let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords(), time: temp.getDates() ?? [])
     return photosIdentifier
 }
+
+func findVideos() -> [String] {
+    
+    return []
+}
