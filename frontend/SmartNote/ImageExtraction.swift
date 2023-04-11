@@ -128,6 +128,8 @@ func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
             dates.append(Calendar.current.date(from: DateComponents(year: year, month: month, day: day))!)
         }
     }
+    print("showPhotosForKeywords called")
+    print(dates)
     
     for date in dates {
         let start = Calendar.current.startOfDay(for: date)

@@ -58,7 +58,7 @@ class SmartNoteARViewModel: ObservableObject {
 
         // album
         DispatchQueue.global().async {
-            let identifiers = self.findPhotos()
+            let identifiers: Array<String> = self.findPhotos()
             DispatchQueue.main.async {
                 self.handleAlbum(identifiers: identifiers)
             }
@@ -79,9 +79,20 @@ class SmartNoteARViewModel: ObservableObject {
         }
     }
     
-
-    
     func handleSteps(stepsInput: HealthKitViewModel) {
+        print("handleSteps called")
+        print("steps:", stepsInput.userStepCount)
+        let stepsString = "Steps: " + String(stepsInput.userStepCount)
+        // create entity
+        let mesh = MeshResource.generateBox(size: [0.2, 0.0001, 0.2])
+        let entity = ModelEntity(mesh: mesh, materials: [SimpleMaterial()])
+        displayTextAsset(text: stepsString, modelEntity: entity)
+        
+        // Create an anchor and add the entity to the scene
+        let anchor = AnchorEntity(world: [0.42, -0.5, -0.5])
+        anchor.addChild(entity)
+        arView.scene.addAnchor(anchor)
+    
         
     }
     
@@ -98,7 +109,6 @@ class SmartNoteARViewModel: ObservableObject {
             anchor.addChild(entity)
             arView.scene.addAnchor(anchor)
         }
-
     }
     
     func handleAlbum(identifiers: Array<String>) {
@@ -213,7 +223,9 @@ class SmartNoteARViewModel: ObservableObject {
     
     // Delete this function after activate the one above
     func findPhotos() -> [String] {
-        print("findPhotos num keywords", self.keywords.count)
+        print("findPhotos called")
+        print("keywords:", self.keywords)
+        print("dates:", self.dates)
         let photosIdentifier = showPhotosForKeywords(keywords: self.keywords, time: self.dates)
         print("findPhotos finished")
         return photosIdentifier
@@ -237,6 +249,12 @@ class SmartNoteARViewModel: ObservableObject {
         let hkmodel = HealthKitViewModel()
         if (dates[0] != nil) {
             hkmodel.healthRequest(date: dates[0] ?? Date())
+            for date in dates {
+                hkmodel.readStepsTakenToday(date: date!)
+            }
+        }
+        while hkmodel.userStepCount == "" {
+            // do nothing
         }
         print("findSteps finished")
         return hkmodel

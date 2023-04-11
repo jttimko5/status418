@@ -55,7 +55,7 @@ class HealthKitViewModel: ObservableObject {
             if step != 0.0 {
                 DispatchQueue.main.async {
                     self.userStepCount = String(format: "%.0f", step)
-                    print(step)
+                    
                 }
             }
         }
