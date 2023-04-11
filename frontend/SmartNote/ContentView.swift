@@ -49,12 +49,6 @@ struct ContentView: View {
                             .scaledToFit()
                             .frame(width: 100, height: 25)
                     }
-                    NavigationLink(destination: SmartNoteARView()) {
-                        Image(systemName: "camera")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 25)
-                                    }
                     NavigationLink(destination: KeywordView()) {
                             Image(systemName: "arrow.right")
                                 .resizable()
