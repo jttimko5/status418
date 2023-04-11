@@ -50,8 +50,8 @@ def keywords():
                 "man",
                 "ChatGPT"
             ]
-        }, 200
-    )
+        }
+    ), 200
 
     return jsonify(extract_keywords(data['text'])), 200
 
