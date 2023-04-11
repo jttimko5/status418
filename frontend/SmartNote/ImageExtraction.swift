@@ -4,7 +4,6 @@
 //
 //  Created by Pengzhou Chen on 2023/3/18.
 //
-
 import SwiftUI
 import Photos
 import Vision
@@ -115,7 +114,6 @@ func returnImagesForDate(fetchOptions: PHFetchOptions) -> (Int, [String]) {
 
     return (count, photoURLs)
 }
-
 
 func showPhotosForKeywords(keywords: [String], time: [String]) -> [String] {
     var photoURLs: [String] = []

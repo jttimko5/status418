@@ -4,7 +4,6 @@
 //
 //  Created by Tim Stauder on 3/14/23.
 //
-
 import SwiftUI
 import UIKit
 import Photos
@@ -23,6 +22,7 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
+            
             VStack {
                 if selectedImage != nil {
                     Image(uiImage: selectedImage!)
@@ -107,6 +107,7 @@ struct ContentView: View {
 //            }
 //        }
 //        END TESTING API =====================================================
+        
     }
 }
 

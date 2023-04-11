@@ -9,12 +9,16 @@ import Foundation
 import SwiftUI
 import RealityKit
 import Photos
+import ARKit
+import AVKit
+import SpriteKit
 import Vision
 
 struct SmartNoteARView: View {
     var IdentifierInput: Array<String>
+
     @StateObject private var viewModel: SmartNoteARViewModel
-    
+  
     init(IdentifierInput: Array<String>) {
         self.IdentifierInput = IdentifierInput
         self._viewModel = StateObject(wrappedValue: SmartNoteARViewModel(identifiers: IdentifierInput))
@@ -25,6 +29,7 @@ struct SmartNoteARView: View {
         NavigationView {
             ARViewContainer(arView: viewModel.arView)
                 .edgesIgnoringSafeArea(.all)
+
         }
     }
 }
@@ -218,10 +223,11 @@ struct ARViewContainer: UIViewRepresentable {
     func updateUIView(_ uiView: ARView, context: Context) {}
 }
 
+
 class MaterialSwipeGestureRecognizer: UISwipeGestureRecognizer {
     var entity: ModelEntity?
     var albumAssets: [PHAsset] = []
-    var imageIdx = 0
+    var imageIdx = 1
 
     convenience init(target: Any?, action: Selector?, entity: ModelEntity, albumAssets: [PHAsset]) {
         self.init(target: target, action: action)
@@ -229,3 +235,59 @@ class MaterialSwipeGestureRecognizer: UISwipeGestureRecognizer {
         self.albumAssets = albumAssets
     }
 }
+
+
+
+//TODO: Videos show in AR!
+//class VideoARView: ObservableObject {
+//
+//    @IBOutlet weak var arView: ARSCNView!
+//
+//    let player = AVPlayer()
+//    var videoNode = SKVideoNode()
+//
+//    init() {
+//    }
+//
+//    init(identifier: String) {
+//
+//        // Replace with the local identifier of the video you want to load
+//        let localIdentifier = identifier
+//
+//        let options = PHVideoRequestOptions()
+//        options.isNetworkAccessAllowed = true
+//
+//        PHImageManager.default().requestAVAsset(forVideo: PHAsset.fetchAssets(withLocalIdentifiers: [localIdentifier], options: nil).firstObject!, options: options) { asset, _, _ in
+//            guard let asset = asset else {
+//                return
+//            }
+//
+//            DispatchQueue.main.async {
+//                self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
+//                self.videoNode = SKVideoNode(avPlayer: self.player)
+//            }
+//        }
+//
+//        let skScene = SKScene(size: CGSize(width: 1280, height: 720))
+//        skScene.addChild(videoNode)
+//
+//        let plane = SCNPlane(width: 1.0, height: 0.5)
+//        plane.firstMaterial?.isDoubleSided = true
+//        plane.firstMaterial?.diffuse.contents = skScene
+//
+//        let planeNode = SCNNode(geometry: plane)
+//        planeNode.eulerAngles.x = -.pi / 2
+//
+//        let configuration = ARWorldTrackingConfiguration()
+//        arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+//
+//        arView.scene.rootNode.addChildNode(planeNode)
+//    }
+//
+//    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+//        if let videoAnchor = anchor as? ARImageAnchor, videoAnchor == arView.session.currentFrame?.anchors.first {
+//            player.play()
+//        }
+//    }
+//}
+
