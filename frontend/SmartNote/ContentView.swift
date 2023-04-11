@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 import Photos
 import Vision
+import EventKit
 
 struct ContentView: View {
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
@@ -41,6 +42,11 @@ struct ContentView: View {
                     Button(action: {
                         self.sourceType = .photoLibrary
                         self.isImagePickerDisplay.toggle()
+//                        TODO: remove these prints
+//                        print("============ Calendar event titles =============")
+//                        print(findEvents())
+                        print("============ Steps info =============")
+                        print(findSteps())
                     }) {
                         Image(systemName: "photo")
                             .resizable()
@@ -108,7 +114,8 @@ struct ContentView_Previews: PreviewProvider {
 
 struct KeywordView: View {
     @State private var newKeyword = ""
-    @State private var keywords = ["people", "woman", "man"]
+    @State private var dates: [String] = ["02-14-2022", "09-26-2022"]
+    @State private var keywords: [String] = []
     @State private var isEditing = false
     var recognizedText: String
     
@@ -198,6 +205,10 @@ struct KeywordView: View {
         return keywords
     }
     
+    func getDates() -> Array<String>? {
+        return dates
+    }
+    
     // Use this one when completed AR View modification
 //    func findPhotos() -> Array<Array<String>> {
 //        let photosIdentifier = showPhotosForKeywords(keywords: keywords)
@@ -207,9 +218,52 @@ struct KeywordView: View {
 }
 
 
+func getConvertedDates() -> [Date?] {
+    let temp = KeywordView(recognizedText: "")
+    let dates = temp.getDates()
+    
+    var list: [Date?] = []
+    
+    for date in dates ?? [] {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM/dd/yyy"
+        dateFormatter.timeZone = TimeZone.current
+        dateFormatter.locale = Locale.current
+        let date_object: Date? = dateFormatter.date(from: date)
+        list.append(date_object)
+    }
+    return list
+}
+
+
 // Delete this function after activate the one above
 func findPhotos() -> [String] {
     let temp = KeywordView(recognizedText: "")
     let photosIdentifier = showPhotosForKeywords(keywords: temp.getKeywords())
     return photosIdentifier
+}
+
+func findEvents() -> [String]? {
+    let temp = KeywordView(recognizedText: "")
+    let dates = temp.getDates()
+    if (dates != nil) {
+        return pullEvents(dates: dates)
+    }
+    return nil
+}
+
+func findSteps() -> Void {
+    let dates = getConvertedDates()
+    let hkmodel = HealthKitViewModel()
+    if (dates[0] != nil) {
+        hkmodel.healthRequest(date: dates[0] ?? Date())
+    }
+//    retrieveStepCount(date_in: dates![0]) { (steps, error) in
+//                print(error?.localizedDescription)
+//
+//                if error == nil {
+//
+//                    print("Health kit Walked steps  \(steps ?? 0)")
+//                }
+//    }
 }
