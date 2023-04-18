@@ -22,8 +22,8 @@ func fetchVideoIdentifier(dates: [String]) -> String {
         stop.pointee = true
     }
 
-    print("We found one video")
     if let matchingVideoIdentifier = matchingVideoIdentifier {
+        print("We found one video")
         print("Matching video identifier: \(matchingVideoIdentifier)")
         return matchingVideoIdentifier
     } else {

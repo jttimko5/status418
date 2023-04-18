@@ -196,6 +196,10 @@ class SmartNoteARViewModel: ObservableObject {
     }
     
     func displayVideo(identifier: String) {
+        if identifier == "" {
+            return
+        }
+        
         let options = PHVideoRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
