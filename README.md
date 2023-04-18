@@ -7,6 +7,6 @@
 ![Elevator Pitch](https://user-images.githubusercontent.com/58456051/133131373-e909da64-93cb-449f-b9f0-3a58dcb1b9db.png) <!-- MUST be placed in user-images.githubusercontent.com -->
 ![Team](/assets/team.png)
 
-[video_page]: https://youtu.be/sample
+[video_page]: https://www.youtube.com/watch?v=-nMXjSGSL7o
 [wiki_page]: https://github.com/member/team/wiki
-[agile_page]: https://trello.com/b/sample/general
+[agile_page]: https://trello.com/b/YwRSqnCq/status418
