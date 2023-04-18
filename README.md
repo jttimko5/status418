@@ -8,5 +8,5 @@
 ![Team](/assets/team.png)
 
 [video_page]: https://www.youtube.com/watch?v=-nMXjSGSL7o
-[wiki_page]: https://github.com/member/team/wiki
+[wiki_page]: https://github.com/jttimko5/status418/wiki
 [agile_page]: https://trello.com/b/YwRSqnCq/status418
